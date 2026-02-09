@@ -4,7 +4,7 @@ from .models import JiraConnection, JiraIssue, JiraProject
 
 @admin.register(JiraConnection)
 class JiraConnectionAdmin(admin.ModelAdmin):
-    list_display = ("id", "cliente", "base_url", "email", "ativo", "atualizado_em")
+    list_display = ("id", "nome_jira", "cliente", "nome_jira", "base_url", "sufixo_url", "email", "ativo", "atualizado_em")
     list_filter = ("ativo",)
     search_fields = ("cliente__nome", "base_url", "email")
     autocomplete_fields = ("cliente",)
@@ -15,7 +15,7 @@ class JiraConnectionAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ("Cliente", {"fields": ("cliente", "ativo")}),
-        ("Conexão Jira", {"fields": ("base_url", "cloud_id", "email", "api_token")}),
+        ("Conexão Jira", {"fields": ("nome_jira", "base_url", "sufixo_url", "cloud_id", "email", "api_token")}),
         ("Auditoria", {"fields": ("criado_em", "atualizado_em")}),
     )
 

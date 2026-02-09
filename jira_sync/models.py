@@ -11,8 +11,9 @@ class JiraConnection(models.Model):
         on_delete=models.CASCADE,
         related_name="jira_connection",
     )
-
+    nome_jira = models.CharField(max_length=100, blank=True, null=True, help_text="Ex: 'descrição da api' (opcional)")
     base_url = models.URLField(help_text="Ex: https://suaempresa.atlassian.net")
+    sufixo_url = models.CharField(max_length=255, blank=True, null=True, help_text="Ex: /rest/api/3 (opcional)")    
     cloud_id = models.CharField(max_length=120, blank=True, null=True)
     email = models.EmailField()
     api_token = models.CharField(max_length=255)  # em produção: criptografar/secret manager
