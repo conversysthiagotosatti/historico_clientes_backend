@@ -1,6 +1,7 @@
 from django.urls import path
-from .views import LoginWithClienteView
+from .views import LoginWithClienteView, CreateUserView
 
 urlpatterns = [
-    path("auth/login/", LoginWithClienteView.as_view(), name="auth-login"),
+    path("auth/novo_login/", LoginWithClienteView.as_view(), name="auth-login"),
+    path("auth/users/", CreateUserView.as_view(), name="auth-create-user")
 ]

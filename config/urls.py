@@ -16,7 +16,7 @@ router.register(r"apontamentos", ApontamentoViewSet)
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
-    #path("api/auth/", include("auth_api.urls")),
+    path("api/auth/", include("auth_api.urls")),
     path("api/", include("parametro.urls")),
     path("api/", include("contratos.urls")),
     path("api/", include("tarefas.urls")),

@@ -2,12 +2,13 @@ from django.contrib.auth import authenticate, get_user_model
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from accounts.models import UserClienteMembership  # ajuste o import conforme seu app
-
+from accounts.models import UserClienteMembership, UserClienteRole  # ajuste o import conforme seu app
+from accounts.serializers import CreateUserWithClienteSerializer
+from accounts.permissions import HasClienteRoleAtLeast
 
 User = get_user_model()
 
@@ -90,4 +91,41 @@ class LoginWithClienteView(APIView):
                 "role": membership.role,
             },
             status=status.HTTP_200_OK,
+        )
+
+class CreateUserView(APIView):
+    """
+    POST /api/auth/users/
+    Cria usuário e vincula a um cliente com role.
+
+    Body:
+    {
+      "username": "ana",
+      "email": "ana@empresa.com",
+      "nome": "Ana",
+      "sobrenome": "Silva",
+      "password": "Senha@123",
+      "cliente": 1,
+      "role": "ANALISTA"
+    }
+    """
+    permission_classes = [IsAuthenticated, HasClienteRoleAtLeast.required(UserClienteRole.LIDER)]
+
+    def post(self, request):
+        ser = CreateUserWithClienteSerializer(data=request.data)
+        if not ser.is_valid():
+            return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        user = ser.save()
+
+        return Response(
+            {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "nome": (user.get_full_name() or user.username).strip(),
+                "cliente": int(request.data.get("cliente")),
+                "role": request.data.get("role"),
+            },
+            status=status.HTTP_201_CREATED,
         )
