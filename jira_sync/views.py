@@ -69,10 +69,19 @@ class JiraProjectViewSet(ModelViewSet):
         serializer.save()
 
 
-class JiraIssueViewSet(ModelViewSet):
+try:
+    from accounts.tenant import get_cliente_id_from_request
+except Exception:
+    get_cliente_id_from_request = None
+
+
+class JiraTaskViewSet(ModelViewSet):
+    """
+    CRUD de TASKS (não subtasks), sempre ligadas a um projeto.
+    """
     serializer_class = JiraIssueSerializer
     permission_classes = [IsAuthenticated]
-    queryset = JiraIssue.objects.select_related("cliente", "contrato", "tarefa_local")
+    queryset = JiraIssue.objects.select_related("cliente", "contrato", "project", "parent_issue")
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = JiraIssueFilter
@@ -81,7 +90,37 @@ class JiraIssueViewSet(ModelViewSet):
     ordering = ["-jira_updated_at", "-atualizado_em"]
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = super().get_queryset().filter(is_subtask=False)
+        if get_cliente_id_from_request:
+            cid = get_cliente_id_from_request(self.request)
+            qs = qs.filter(cliente_id=cid)
+        return qs
+
+    def perform_create(self, serializer):
+        # força cliente pelo tenant e força is_subtask=False
+        if get_cliente_id_from_request:
+            cid = get_cliente_id_from_request(self.request)
+            serializer.save(cliente_id=cid, is_subtask=False)
+        else:
+            serializer.save(is_subtask=False)
+
+
+class JiraSubtaskViewSet(ModelViewSet):
+    """
+    CRUD de SUBTASKS (filhas), ligadas ao projeto e à task pai.
+    """
+    serializer_class = JiraIssueSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = JiraIssue.objects.select_related("cliente", "contrato", "project", "parent_issue")
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = JiraIssueFilter
+    search_fields = ["key", "summary", "status", "project_key", "parent_key"]
+    ordering_fields = ["jira_updated_at", "jira_created_at", "criado_em", "atualizado_em"]
+    ordering = ["-jira_updated_at", "-atualizado_em"]
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(is_subtask=True)
         if get_cliente_id_from_request:
             cid = get_cliente_id_from_request(self.request)
             qs = qs.filter(cliente_id=cid)
@@ -90,6 +129,6 @@ class JiraIssueViewSet(ModelViewSet):
     def perform_create(self, serializer):
         if get_cliente_id_from_request:
             cid = get_cliente_id_from_request(self.request)
-            serializer.save(cliente_id=cid)
+            serializer.save(cliente_id=cid, is_subtask=True)
         else:
-            serializer.save()
+            serializer.save(is_subtask=True)

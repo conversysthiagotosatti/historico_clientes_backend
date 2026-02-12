@@ -60,6 +60,15 @@ class JiraIssueSerializer(serializers.ModelSerializer):
             "id",
             "cliente",
             "contrato",
+
+            # ✅ novos
+            "project",
+            "parent_issue",
+            "is_subtask",
+            "parent_key",
+            "issue_type_id",
+
+            # Identificadores Jira
             "jira_id",
             "key",
             "project_key",
@@ -68,20 +77,26 @@ class JiraIssueSerializer(serializers.ModelSerializer):
             "description",
             "status",
             "priority",
+
             "assignee_account_id",
             "assignee_display_name",
             "reporter_account_id",
             "reporter_display_name",
+
             "labels",
             "components",
             "raw",
+
             "jira_created_at",
             "jira_updated_at",
             "jira_resolved_at",
             "due_date",
+
             "original_estimate_seconds",
             "time_spent_seconds",
+
             "tarefa_local",
+
             "criado_em",
             "atualizado_em",
         ]

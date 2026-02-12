@@ -11,9 +11,23 @@ class JiraConnection(models.Model):
         on_delete=models.CASCADE,
         related_name="jira_connection",
     )
-    nome_jira = models.CharField(max_length=100, blank=True, null=True, help_text="Ex: 'descrição da api' (opcional)")
+
+    nome_jira = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Ex: 'descrição da api' (opcional)",
+    )
+
     base_url = models.URLField(help_text="Ex: https://suaempresa.atlassian.net")
-    sufixo_url = models.CharField(max_length=255, blank=True, null=True, help_text="Ex: /rest/api/3 (opcional)")    
+
+    sufixo_url = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Ex: /rest/api/3 (opcional)",
+    )
+
     cloud_id = models.CharField(max_length=120, blank=True, null=True)
     email = models.EmailField()
     api_token = models.CharField(max_length=255)  # em produção: criptografar/secret manager
@@ -24,13 +38,15 @@ class JiraConnection(models.Model):
     atualizado_em = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"JiraConnection({self.cliente.nome})"
+        # defensivo (evita erro em situações de admin/migration)
+        cliente_nome = getattr(self.cliente, "nome", "cliente")
+        return f"JiraConnection({cliente_nome})"
+
 
 class JiraProject(models.Model):
     """
     Projeto do Jira vinculado a uma JiraConnection
     """
-
     jira_connection = models.ForeignKey(
         "jira_sync.JiraConnection",
         on_delete=models.CASCADE,
@@ -38,15 +54,15 @@ class JiraProject(models.Model):
     )
 
     # Identificadores Jira
-    jira_id = models.CharField(max_length=60)          # id interno do Jira
-    key = models.CharField(max_length=20)              # ex: ENG
+    jira_id = models.CharField(max_length=60)  # id interno do Jira
+    key = models.CharField(max_length=20)      # ex: ENG
     name = models.CharField(max_length=255)
 
     project_type = models.CharField(
         max_length=50,
         blank=True,
         null=True,
-        help_text="software, service_desk, business"
+        help_text="software, service_desk, business",
     )
 
     is_private = models.BooleanField(default=False)
@@ -65,7 +81,8 @@ class JiraProject(models.Model):
 
     class Meta:
         unique_together = (
-            ("jira_connection", "key"),  # mesmo projeto não se repete na conexão
+            ("jira_connection", "key"),     # mesmo projeto não se repete na conexão
+            ("jira_connection", "jira_id"), # opcional, mas ajuda a garantir consistência
         )
         indexes = [
             models.Index(fields=["jira_connection", "key"]),
@@ -76,16 +93,16 @@ class JiraProject(models.Model):
         return f"{self.key} - {self.name}"
 
 
-
 class JiraIssue(models.Model):
     """
-    Representa uma 'tarefa' do Jira (Issue) armazenada localmente.
+    Representa uma issue do Jira (Task/Story/Bug/Sub-task etc.) armazenada localmente.
     """
     cliente = models.ForeignKey(
         "clientes.Cliente",
         on_delete=models.CASCADE,
         related_name="jira_issues",
     )
+
     contrato = models.ForeignKey(
         "contratos.Contrato",
         on_delete=models.SET_NULL,
@@ -94,6 +111,31 @@ class JiraIssue(models.Model):
         null=True,
         help_text="Opcional: se você conseguir mapear issue -> contrato",
     )
+
+    # ✅ Liga a issue ao projeto cadastrado na tabela JiraProject
+    project = models.ForeignKey(
+        "jira_sync.JiraProject",
+        on_delete=models.SET_NULL,
+        related_name="issues",
+        null=True,
+        blank=True,
+        help_text="Projeto local (JiraProject) associado a esta issue",
+    )
+
+    # ✅ Hierarquia: subtask -> task pai
+    parent_issue = models.ForeignKey(
+        "jira_sync.JiraIssue",
+        on_delete=models.SET_NULL,
+        related_name="subtasks",
+        null=True,
+        blank=True,
+        help_text="Issue pai (quando esta issue for subtask)",
+    )
+
+    # (opcionais mas úteis)
+    is_subtask = models.BooleanField(default=False)
+    parent_key = models.CharField(max_length=30, blank=True, null=True)  # ex: ENG-120 (pai)
+    issue_type_id = models.CharField(max_length=30, blank=True, null=True)
 
     # Identificadores Jira
     jira_id = models.CharField(max_length=60, unique=True)  # id interno do Jira
@@ -143,6 +185,9 @@ class JiraIssue(models.Model):
         indexes = [
             models.Index(fields=["cliente", "contrato", "status"]),
             models.Index(fields=["project_key", "jira_updated_at"]),
+            models.Index(fields=["project", "status"]),
+            models.Index(fields=["parent_issue"]),
+            models.Index(fields=["cliente", "project", "is_subtask"]),
         ]
 
     def __str__(self):

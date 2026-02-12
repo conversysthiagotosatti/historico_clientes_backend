@@ -25,6 +25,12 @@ class JiraProjectFilter(django_filters.FilterSet):
 class JiraIssueFilter(django_filters.FilterSet):
     cliente = django_filters.NumberFilter(field_name="cliente_id")
     contrato = django_filters.NumberFilter(field_name="contrato_id")
+
+    # ✅ novos
+    project = django_filters.NumberFilter(field_name="project_id")
+    is_subtask = django_filters.BooleanFilter(field_name="is_subtask")
+    parent_issue = django_filters.NumberFilter(field_name="parent_issue_id")
+
     project_key = django_filters.CharFilter(field_name="project_key", lookup_expr="iexact")
     status = django_filters.CharFilter(field_name="status", lookup_expr="iexact")
     key = django_filters.CharFilter(field_name="key", lookup_expr="iexact")
@@ -32,4 +38,4 @@ class JiraIssueFilter(django_filters.FilterSet):
 
     class Meta:
         model = JiraIssue
-        fields = ["cliente", "contrato", "project_key", "status", "key", "summary"]
+        fields = ["cliente", "contrato", "project", "is_subtask", "parent_issue", "project_key", "status", "key", "summary"]
