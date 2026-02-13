@@ -7,6 +7,14 @@ class Cliente(models.Model):
     telefone = models.CharField(max_length=30, blank=True, null=True)
     ativo = models.BooleanField(default=True)
 
+    # ✅ Novo campo logotipo
+    logotipo = models.ImageField(
+        upload_to="clientes/logotipos/",
+        blank=True,
+        null=True,
+        help_text="Imagem do logotipo do cliente (PNG/JPG/SVG)",
+    )
+
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 

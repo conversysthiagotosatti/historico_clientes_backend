@@ -52,6 +52,15 @@ class JiraProject(models.Model):
         on_delete=models.CASCADE,
         related_name="projects",
     )
+    contrato = models.ForeignKey(
+        "contratos.Contrato",
+        on_delete=models.SET_NULL,
+        related_name="jira_projects",
+        null=True,
+        blank=True,
+        help_text="Contrato do cliente ao qual este projeto Jira está associado",
+    )
+
 
     # Identificadores Jira
     jira_id = models.CharField(max_length=60)  # id interno do Jira
@@ -87,10 +96,23 @@ class JiraProject(models.Model):
         indexes = [
             models.Index(fields=["jira_connection", "key"]),
             models.Index(fields=["jira_connection", "archived"]),
+            models.Index(fields=["jira_connection", "contrato"]),
         ]
 
     def __str__(self):
         return f"{self.key} - {self.name}"
+    
+    def clean(self):
+        # contrato precisa ser do mesmo cliente da conexão
+        if self.contrato_id and self.jira_connection_id:
+            if self.contrato.cliente_id != self.jira_connection.cliente_id:
+                from django.core.exceptions import ValidationError
+                raise ValidationError("O contrato selecionado não pertence ao mesmo cliente da JiraConnection.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
 
 
 class JiraIssue(models.Model):

@@ -3,13 +3,22 @@ from django.contrib import admin
 from .models import JiraConnection, JiraProject, JiraIssue
 
 
-# ---------- Inlines (para ver hierarquia no admin) ----------
+# ---------- Inlines ----------
 
 class JiraProjectInline(admin.TabularInline):
     model = JiraProject
     extra = 0
-    fields = ("key", "name", "project_type", "archived", "is_private", "atualizado_em")
+    fields = (
+        "contrato",
+        "key",
+        "name",
+        "project_type",
+        "archived",
+        "is_private",
+        "atualizado_em",
+    )
     readonly_fields = ("atualizado_em",)
+    autocomplete_fields = ("contrato",)
     show_change_link = True
 
 
@@ -46,12 +55,45 @@ class JiraConnectionAdmin(admin.ModelAdmin):
 
 @admin.register(JiraProject)
 class JiraProjectAdmin(admin.ModelAdmin):
-    list_display = ("id", "jira_connection", "key", "name", "project_type", "archived", "is_private", "atualizado_em")
-    list_filter = ("archived", "is_private", "project_type", "jira_connection")
-    search_fields = ("key", "name", "jira_id", "jira_connection__cliente__nome", "jira_connection__nome_jira")
+    list_display = (
+        "id",
+        "jira_connection",
+        "contrato",
+        "key",
+        "name",
+        "project_type",
+        "archived",
+        "is_private",
+        "atualizado_em",
+    )
+    list_filter = (
+        "jira_connection",
+        "contrato",
+        "archived",
+        "is_private",
+        "project_type",
+    )
+    search_fields = (
+        "key",
+        "name",
+        "jira_id",
+        "jira_connection__cliente__nome",
+        "jira_connection__nome_jira",
+        "contrato__titulo",
+        "contrato__cliente__nome",
+    )
     ordering = ("key",)
-    autocomplete_fields = ("jira_connection",)
+    autocomplete_fields = ("jira_connection", "contrato")
     readonly_fields = ("criado_em", "atualizado_em")
+
+    fieldsets = (
+        ("Vínculos", {"fields": ("jira_connection", "contrato")}),
+        ("Identificadores Jira", {"fields": ("jira_id", "key", "name")}),
+        ("Configuração", {"fields": ("project_type", "archived", "is_private", "url")}),
+        ("Líder", {"fields": ("lead_account_id", "lead_display_name")}),
+        ("Extras", {"fields": ("raw",)}),
+        ("Auditoria", {"fields": ("criado_em", "atualizado_em")}),
+    )
 
 
 @admin.register(JiraIssue)
@@ -59,6 +101,7 @@ class JiraIssueAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "cliente",
+        "contrato",
         "project",
         "key",
         "issue_type",
@@ -71,6 +114,7 @@ class JiraIssueAdmin(admin.ModelAdmin):
     )
     list_filter = (
         "cliente",
+        "contrato",
         "project",
         "is_subtask",
         "status",
@@ -82,6 +126,7 @@ class JiraIssueAdmin(admin.ModelAdmin):
         "summary",
         "project_key",
         "cliente__nome",
+        "contrato__titulo",
         "assignee_display_name",
         "reporter_display_name",
     )
@@ -92,7 +137,7 @@ class JiraIssueAdmin(admin.ModelAdmin):
     inlines = [JiraSubtaskInline]
 
     fieldsets = (
-        ("Identificação / Cliente", {"fields": ("cliente", "contrato", "project")}),
+        ("Identificação / Vínculos", {"fields": ("cliente", "contrato", "project")}),
         ("Jira", {"fields": ("jira_id", "key", "project_key", "issue_type_id", "issue_type")}),
         ("Conteúdo", {"fields": ("summary", "description")}),
         ("Status", {"fields": ("status", "priority")}),
