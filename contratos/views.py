@@ -17,6 +17,7 @@ from django.db.models import Q
 from .services_timer import iniciar_timer, pausar_timer, retomar_timer, finalizar_timer
 from copilot.contracts.service import responder_pergunta_contrato
 from .filters import ContratoTarefaFilter
+from .views_pdf import AnalisarContratoPDFView
 
 # (opcional, mas recomendado) schema para forçar JSON consistente
 CONTRACT_SCHEMA = {
@@ -267,7 +268,12 @@ class ContratoViewSet(viewsets.ModelViewSet):  # ✅ troque ... por ModelViewSet
             status=status.HTTP_200_OK,
         )
 
-
+    @action(detail=True, methods=["post"], url_path="analisar-pdf", parser_classes=[MultiPartParser, FormParser])
+    def analisar_pdf(self, request, pk=None):
+        # reutiliza sua APIView existente chamando o método post
+        view = AnalisarContratoPDFView.as_view()
+        return view(request._request, pk=pk)
+    
 
 def analisar_pdf(self, request, pk=None):
     """

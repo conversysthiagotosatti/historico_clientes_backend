@@ -18,6 +18,16 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from django.contrib.auth import get_user_model
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.response import Response
+
+from .filters import UserFilter
+from .serializers import UserListSerializer, CreateUserWithMembershipsSerializer
+
 User = get_user_model()
 
 class LoginWithClienteView(APIView):
@@ -108,7 +118,7 @@ class CreateUserView(APIView):
     permission_classes = [IsAuthenticated, HasClienteRoleAtLeast.required(UserClienteRole.LIDER)]
 
     def post(self, request):
-        ser = CreateUserWithClienteSerializer(data=request.data)
+        ser = CreateUserWithMembershipsSerializer(data=request.data)
         if not ser.is_valid():
             return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -140,3 +150,28 @@ class MeClientsView(APIView):
             {"cliente_id": m.cliente_id, "cliente_nome": m.cliente.nome, "role": m.role}
             for m in ms
         ])
+
+
+
+User = get_user_model()
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all().order_by("-id")
+    permission_classes = [IsAuthenticated]
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = UserFilter
+    search_fields = ["username", "email", "first_name", "last_name"]
+    ordering_fields = ["id", "username", "email", "date_joined", "last_login", "is_active", "is_staff"]
+    ordering = ["-id"]
+
+    # ✅ importante: se nenhuma ação bater, cai no list serializer (evita AssertionError)
+    serializer_class = UserListSerializer
+
+    def get_serializer_class(self):
+        #if self.action == "create":
+        #    return UserCreateSerializer
+        #if self.action in ("update", "partial_update"):
+        #    return UserUpdateSerializer
+        return UserListSerializer
+
