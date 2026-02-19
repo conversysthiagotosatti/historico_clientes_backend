@@ -56,7 +56,8 @@ INSTALLED_APPS = [
     "rag",
     "zabbix_integration",
     "accounts",
-    "django_extensions"
+    "django_extensions",
+    "django.contrib.postgres",
 ]
 
 

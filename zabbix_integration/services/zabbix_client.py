@@ -1,4 +1,5 @@
 import requests
+import json
 from urllib.parse import urljoin
 
 
@@ -18,27 +19,42 @@ class ZabbixClient:
         # Zabbix JSON-RPC endpoint padrão
         return urljoin(self.base_url, "api_jsonrpc.php")
 
+
+
     def _call(self, method: str, params: dict | list | None = None, auth: bool = True):
         payload = {
             "jsonrpc": "2.0",
             "method": method,
-            "params": params or {},
-            "id": self._id,
+            "params": params if params is not None else {},
+            "id": self._id,  # ✅ usa o contador
         }
         self._id += 1
 
         if auth and self.auth_token:
             payload["auth"] = self.auth_token
 
+        print("ZABBIX RPC:", json.dumps(payload, ensure_ascii=False)[:2000])
+
         r = requests.post(self.endpoint, json=payload, timeout=self.timeout)
+
+        # ✅ log útil antes de estourar
         if r.status_code >= 400:
+            print("ZABBIX HTTP ERROR:", r.status_code, r.text[:2000])
             raise ZabbixAPIError(f"HTTP {r.status_code}: {r.text[:500]}")
 
-        data = r.json()
+        # ✅ protege contra resposta não-JSON
+        try:
+            data = r.json()
+        except Exception:
+            print("ZABBIX NON-JSON RESPONSE:", r.text[:2000])
+            raise ZabbixAPIError(f"Resposta não-JSON do Zabbix: {r.text[:500]}")
+
         if "error" in data:
+            print("ZABBIX RPC ERROR:", data["error"])
             raise ZabbixAPIError(f"{data['error']}")
 
-        return data["result"]
+        return data.get("result")
+
 
     def login(self, user: str, password: str) -> str:
         token = self._call("user.login", {"username": user, "password": password}, auth=False)

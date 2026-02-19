@@ -11,14 +11,12 @@ from .serializers import ContratoSerializer, ContratoTarefaSerializer
 from openai import OpenAI
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-
 from .models import Contrato, ContratoArquivo, ContratoClausula, ContratoTarefa, TarefaTimer
-
 from .services_tarefas import gerar_tarefas_por_clausulas
-
 from django.db.models import Q
-
 from .services_timer import iniciar_timer, pausar_timer, retomar_timer, finalizar_timer
+from copilot.contracts.service import responder_pergunta_contrato
+from .filters import ContratoTarefaFilter
 
 # (opcional, mas recomendado) schema para forçar JSON consistente
 CONTRACT_SCHEMA = {
@@ -100,6 +98,15 @@ class ContratoViewSet(viewsets.ModelViewSet):  # ✅ troque ... por ModelViewSet
     search_fields = ["titulo", "descricao"]
     ordering_fields = ["id", "data_inicio", "data_fim", "criado_em"]
     ordering = ["-id"]
+
+    @action(detail=True, methods=["post"], url_path="copilot/query")
+    def copilot_query(self, request, pk=None):
+        pergunta = (request.data.get("message") or "").strip()
+        if not pergunta:
+            return Response({"detail": "Envie 'message'."}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = responder_pergunta_contrato(user=request.user, contrato_id=int(pk), pergunta=pergunta)
+        return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"], url_path="gerar-tarefas")
     def gerar_tarefas(self, request, pk=None):
@@ -413,16 +420,38 @@ def analisar_pdf(self, request, pk=None):
     )
 
 class ContratoTarefaViewSet(viewsets.ModelViewSet):
-    queryset = ContratoTarefa.objects.all()
+    queryset = (
+        ContratoTarefa.objects
+        .select_related("contrato", "contrato__cliente", "clausula")
+        .all()
+    )
     serializer_class = ContratoTarefaSerializer
     permission_classes = [IsAuthenticated]
 
+    # ✅ filtros enterprise
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = ContratoTarefaFilter
+
+    # ✅ busca textual
+    search_fields = ["titulo", "descricao", "responsavel_sugerido", "prioridade"]
+
+    # ✅ ordenação
+    ordering_fields = [
+        "id",
+        "criado_em",
+        "atualizado_em",
+        "status",
+        "prioridade",
+        "prazo_dias_sugerido",
+    ]
+    ordering = ["-criado_em"]
+
+    # --- suas actions de timer continuam iguais ---
     @action(detail=True, methods=["post"], url_path="timer/iniciar")
     def timer_iniciar(self, request, pk=None):
         contratotarefa = self.get_object()
-        print(f"Iniciando timer para tarefa {contratotarefa.id} - {contratotarefa.titulo}")
         timer = iniciar_timer(tarefa=contratotarefa, usuario=request.user, observacao=request.data.get("observacao"))
-        return Response({"timer_id": timer.id, "estado": timer.estado}, status=status.HTTP_200_OK)
+        return Response({"timer_id": timer.id, "estado": timer.estado}, status=200)
 
     @action(detail=True, methods=["post"], url_path="timer/pausar")
     def timer_pausar(self, request, pk=None):

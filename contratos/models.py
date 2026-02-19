@@ -5,6 +5,8 @@ from clientes.models import Cliente
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.contrib.postgres.search import SearchVectorField
+from django.contrib.postgres.indexes import GinIndex
 
 class Contrato(models.Model):
     cliente = models.ForeignKey("clientes.Cliente", on_delete=models.CASCADE, related_name="contratos")
@@ -136,11 +138,16 @@ class ContratoClausula(models.Model):
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 
+    search_vector = SearchVectorField(null=True)  # <= novo
+
     class Meta:
         indexes = [
             models.Index(fields=["contrato", "ordem"]),
             models.Index(fields=["contrato", "numero"]),
             models.Index(fields=["fonte_arquivo"]),
+            GinIndex(fields=["search_vector"], name="clausula_fts_gin"),
+            GinIndex(name="clausula_texto_trgm", fields=["texto"], opclasses=["gin_trgm_ops"]),
+            GinIndex(name="clausula_titulo_trgm", fields=["titulo"], opclasses=["gin_trgm_ops"]),
         ]
         ordering = ["ordem", "id"]
 
@@ -228,3 +235,65 @@ class TarefaTimerPausa(models.Model):
 
     def __str__(self):
         return f"Pausa({self.timer_id})"
+
+class CopilotRun(models.Model):
+    class Mode(models.TextChoices):
+        QA = "QA", "Pergunta/Resposta"
+        EXTRACT_TASKS = "EXTRACT_TASKS", "Sugerir Tarefas"
+        ACTION = "ACTION", "Executar Ação"
+
+    class Status(models.TextChoices):
+        OK = "OK", "OK"
+        ERROR = "ERROR", "Erro"
+        DENIED = "DENIED", "Negado"
+
+    contrato = models.ForeignKey("contratos.Contrato", on_delete=models.CASCADE, related_name="copilot_runs")
+    cliente = models.ForeignKey("clientes.Cliente", on_delete=models.CASCADE, related_name="copilot_runs")
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="copilot_runs")
+
+    mode = models.CharField(max_length=20, choices=Mode.choices, default=Mode.QA)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.OK)
+
+    user_message = models.TextField()
+    query_expansion = models.JSONField(blank=True, null=True)
+
+    # explicabilidade / evidência
+    retrieved = models.JSONField(blank=True, null=True)  # ids, ranks, highlights, método, etc.
+    citations = models.JSONField(blank=True, null=True)  # referências “clausula_id -> trecho”
+    answer = models.TextField(blank=True, null=True)
+
+    # observabilidade
+    model = models.CharField(max_length=80, blank=True, null=True)
+    prompt_version = models.CharField(max_length=40, blank=True, null=True)
+    latency_ms = models.IntegerField(blank=True, null=True)
+    token_usage = models.JSONField(blank=True, null=True)
+
+    error = models.TextField(blank=True, null=True)
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["cliente", "contrato", "criado_em"]),
+            models.Index(fields=["usuario", "criado_em"]),
+            models.Index(fields=["status", "criado_em"]),
+        ]
+
+
+class CopilotActionLog(models.Model):
+    """
+    Cada ação executada via Copilot (ex: criar tarefa) vira um log rastreável.
+    """
+    run = models.ForeignKey(CopilotRun, on_delete=models.CASCADE, related_name="actions")
+    action_name = models.CharField(max_length=60)
+    action_input = models.JSONField()
+    action_output = models.JSONField(blank=True, null=True)
+    ok = models.BooleanField(default=True)
+    error = models.TextField(blank=True, null=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["action_name", "criado_em"]),
+            models.Index(fields=["ok", "criado_em"]),
+        ]

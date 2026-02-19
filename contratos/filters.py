@@ -1,5 +1,5 @@
 import django_filters
-from .models import Contrato
+from .models import Contrato, ContratoTarefa
 
 
 class ContratoFilter(django_filters.FilterSet):
@@ -41,4 +41,38 @@ class ContratoFilter(django_filters.FilterSet):
             "horas_min",
             "horas_max",
             "ativo_em",
+        ]
+
+class ContratoTarefaFilter(django_filters.FilterSet):
+    # filtros por data (intervalo)
+    criado_em_de = django_filters.DateTimeFilter(field_name="criado_em", lookup_expr="gte")
+    criado_em_ate = django_filters.DateTimeFilter(field_name="criado_em", lookup_expr="lte")
+    atualizado_em_de = django_filters.DateTimeFilter(field_name="atualizado_em", lookup_expr="gte")
+    atualizado_em_ate = django_filters.DateTimeFilter(field_name="atualizado_em", lookup_expr="lte")
+
+    # filtros por campos relacionados
+    cliente = django_filters.NumberFilter(field_name="contrato__cliente_id")
+    contrato = django_filters.NumberFilter(field_name="contrato_id")
+    clausula = django_filters.NumberFilter(field_name="clausula_id")
+
+    # filtros diretos
+    status = django_filters.CharFilter(field_name="status")
+    prioridade = django_filters.CharFilter(field_name="prioridade", lookup_expr="iexact")
+    gerada_por_ia = django_filters.BooleanFilter(field_name="gerada_por_ia")
+    responsavel_sugerido = django_filters.CharFilter(field_name="responsavel_sugerido", lookup_expr="icontains")
+
+    class Meta:
+        model = ContratoTarefa
+        fields = [
+            "cliente",
+            "contrato",
+            "clausula",
+            "status",
+            "prioridade",
+            "gerada_por_ia",
+            "responsavel_sugerido",
+            "criado_em_de",
+            "criado_em_ate",
+            "atualizado_em_de",
+            "atualizado_em_ate",
         ]

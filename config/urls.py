@@ -22,7 +22,7 @@ urlpatterns = [
     path("api/", include(router.urls)),
     path("api/auth/", include("auth_api.urls")),
     path("api/", include("parametro.urls")),
-    path("api/", include("contratos.urls")),
+    #path("api/", include("contratos.urls")),
     #path("api/", include("tarefas.urls")),
     path("api/", include("jira_sync.urls")),
     path("api/", include("rag.urls")),
