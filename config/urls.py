@@ -6,6 +6,7 @@ from rest_framework.routers import DefaultRouter
 
 from clientes.views import ClienteViewSet
 from contratos.views import ContratoViewSet, ContratoTarefaViewSet, ContratoClausulaViewSet
+from contratos.views_arquivo import ContratoArquivoViewSet
 from tarefas.views import TarefaViewSet, ApontamentoViewSet
 from auth_api import views as auth_views
 
@@ -14,6 +15,7 @@ router.register(r"clientes", ClienteViewSet)
 router.register(r"contratos", ContratoViewSet)
 router.register(r"contratos-tarefas", ContratoTarefaViewSet)
 router.register(r"contratos-clausulas", ContratoClausulaViewSet)
+router.register(r"contratos-arquivos", ContratoArquivoViewSet, basename="contrato-arquivos")
 #router.register(r"tarefas", TarefaViewSet)
 router.register(r"tarefas", TarefaViewSet, basename="tarefas")
 router.register(r"apontamentos", ApontamentoViewSet)
@@ -30,6 +32,7 @@ urlpatterns = [
     path("api/", include("zabbix_integration.urls")),
     path("api/", include("accounts.urls")),
     path("api/", include("contratos.analytics.urls")),
+    path("api/", include("contratos.urls")),
 
 ]
 
