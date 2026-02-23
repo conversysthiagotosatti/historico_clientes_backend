@@ -33,6 +33,7 @@ urlpatterns = [
     path("api/", include("accounts.urls")),
     path("api/", include("contratos.analytics.urls")),
     path("api/", include("contratos.urls")),
+    path("copilot/mcp/", include("copilot_mcp.urls")),
 
 ]
 
