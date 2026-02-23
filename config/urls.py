@@ -5,7 +5,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from clientes.views import ClienteViewSet
-from contratos.views import ContratoViewSet, ContratoTarefaViewSet
+from contratos.views import ContratoViewSet, ContratoTarefaViewSet, ContratoClausulaViewSet
 from tarefas.views import TarefaViewSet, ApontamentoViewSet
 from auth_api import views as auth_views
 
@@ -13,6 +13,7 @@ router = DefaultRouter()
 router.register(r"clientes", ClienteViewSet)
 router.register(r"contratos", ContratoViewSet)
 router.register(r"contratos-tarefas", ContratoTarefaViewSet)
+router.register(r"contratos-clausulas", ContratoClausulaViewSet)
 #router.register(r"tarefas", TarefaViewSet)
 router.register(r"tarefas", TarefaViewSet, basename="tarefas")
 router.register(r"apontamentos", ApontamentoViewSet)

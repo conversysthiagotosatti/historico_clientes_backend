@@ -1,6 +1,5 @@
 import django_filters
-from .models import Contrato, ContratoTarefa
-
+from .models import Contrato, ContratoTarefa, ContratoClausula
 
 class ContratoFilter(django_filters.FilterSet):
     # filtro por cliente (id)
@@ -76,3 +75,39 @@ class ContratoTarefaFilter(django_filters.FilterSet):
             "atualizado_em_de",
             "atualizado_em_ate",
         ]
+
+
+
+class ContratoClausulaFilter(django_filters.FilterSet):
+    # IDs
+    contrato = django_filters.NumberFilter(field_name="contrato_id")
+    fonte_arquivo = django_filters.NumberFilter(field_name="fonte_arquivo_id")
+
+    # booleans
+    extraida_por_ia = django_filters.BooleanFilter(field_name="extraida_por_ia")
+
+    # numero
+    numero = django_filters.CharFilter(field_name="numero", lookup_expr="exact")
+    numero_contains = django_filters.CharFilter(field_name="numero", lookup_expr="icontains")
+
+    # texto/titulo
+    titulo = django_filters.CharFilter(field_name="titulo", lookup_expr="icontains")
+    texto = django_filters.CharFilter(field_name="texto", lookup_expr="icontains")
+
+    # ordem (range)
+    ordem_min = django_filters.NumberFilter(field_name="ordem", lookup_expr="gte")
+    ordem_max = django_filters.NumberFilter(field_name="ordem", lookup_expr="lte")
+
+    # confidence (range)
+    confidence_min = django_filters.NumberFilter(field_name="confidence", lookup_expr="gte")
+    confidence_max = django_filters.NumberFilter(field_name="confidence", lookup_expr="lte")
+
+    # datas (range)
+    criado_de = django_filters.DateTimeFilter(field_name="criado_em", lookup_expr="gte")
+    criado_ate = django_filters.DateTimeFilter(field_name="criado_em", lookup_expr="lte")
+    atualizado_de = django_filters.DateTimeFilter(field_name="atualizado_em", lookup_expr="gte")
+    atualizado_ate = django_filters.DateTimeFilter(field_name="atualizado_em", lookup_expr="lte")
+
+    class Meta:
+        model = ContratoClausula
+        fields = []

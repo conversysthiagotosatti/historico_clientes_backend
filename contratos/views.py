@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from contratos.services_proposta import importar_proposta_tecnica_e_gerar_tarefas
-from .serializers import ContratoSerializer, ContratoTarefaSerializer
+from .serializers import ContratoSerializer, ContratoTarefaSerializer, ContratoClausulaSerializer
 from openai import OpenAI
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -18,7 +18,7 @@ from .services_tarefas import gerar_tarefas_por_clausulas
 from django.db.models import Q
 from .services_timer import iniciar_timer, pausar_timer, retomar_timer, finalizar_timer
 from copilot.contracts.service import responder_pergunta_contrato
-from .filters import ContratoTarefaFilter
+from .filters import ContratoTarefaFilter, ContratoClausulaFilter
 from .views_pdf import AnalisarContratoPDFView
 
 # (opcional, mas recomendado) schema para forçar JSON consistente
@@ -511,3 +511,31 @@ class ContratoTarefaViewSet(viewsets.ModelViewSet):
         descricao = request.data.get("descricao")
         result = finalizar_timer(timer, descricao_apontamento=descricao, concluir_tarefa=concluir)
         return Response(result, status=200)
+    
+class ContratoClausulaViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ContratoClausulaSerializer
+
+    queryset = (
+        ContratoClausula.objects
+        .select_related("contrato", "fonte_arquivo")
+        .all()
+    )
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = ContratoClausulaFilter
+
+    # Busca simples (LIKE/ILIKE). Bom com seu trigram index.
+    search_fields = ["numero", "titulo", "texto"]
+
+    # Ordenação
+    ordering_fields = ["ordem", "criado_em", "atualizado_em", "numero", "confidence", "id"]
+    ordering = ["ordem", "id"]
+
+    # (Opcional, recomendado) forçar que list venha sempre filtrado por contrato
+    def get_queryset(self):
+        qs = super().get_queryset()
+        contrato_id = self.request.query_params.get("contrato")
+        if contrato_id:
+            qs = qs.filter(contrato_id=int(contrato_id))
+        return qs
