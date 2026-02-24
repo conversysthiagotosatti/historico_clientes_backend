@@ -44,12 +44,21 @@ class ZabbixHost(models.Model):
 class ZabbixTrigger(models.Model):
     cliente = models.ForeignKey("clientes.Cliente", on_delete=models.CASCADE)
     triggerid = models.CharField(max_length=50)
-    descricao = models.CharField(max_length=255)
-    prioridade = models.IntegerField()
-    status = models.CharField(max_length=20)
-    ultima_alteracao = models.DateTimeField()
-    raw = models.JSONField(default=dict, blank=True)
+    name = models.CharField(max_length=255, null=True)
+    severity = models.IntegerField(null=True)
+    enabled = models.BooleanField(null=True)
+    lastchange = models.DateTimeField(null=True)
+
+    description = models.TextField(null=True)
+    expression = models.TextField(null=True)
+    priority = models.IntegerField(null=True)
+    value = models.IntegerField(null=True)
+    status = models.BooleanField(null=True)
+    lastchange = models.DateTimeField(null=True)
+
+    raw = models.JSONField(null=True)
     items = models.ForeignKey("zabbix_integration.ZabbixItem", on_delete=models.CASCADE, related_name="triggers", null=True)
+    
     class Meta:
         unique_together = ("cliente", "triggerid")
 
@@ -88,6 +97,8 @@ class ZabbixItem(models.Model):
 
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
+    
+    raw = models.JSONField(blank=True, null=True)
 
     class Meta:
         unique_together = ("cliente", "itemid")

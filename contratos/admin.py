@@ -39,9 +39,9 @@ class ContratoClausulaAdmin(admin.ModelAdmin):
 
 @admin.register(ContratoTarefa)
 class ContratoTarefaAdmin(admin.ModelAdmin):
-    list_display = ("id", "contrato", "status", "clausula", "titulo", "descricao", "atualizado_em")
-    list_filter = ("status", "contrato", "titulo", "clausula", "descricao")
-    search_fields = ("status", "contrato", "titulo", "clausula", "descricao")
+    list_display = ("id", "contrato", "status", "usuario_responsavel","clausula", "titulo", "descricao", "atualizado_em")
+    list_filter = ("status", "contrato", "usuario_responsavel","titulo", "clausula", "descricao")
+    search_fields = ("status", "contrato", "usuario_responsavel", "titulo", "clausula", "descricao")
 
 @admin.register(TarefaTimer)
 class TarefatimerAdmin(admin.ModelAdmin):

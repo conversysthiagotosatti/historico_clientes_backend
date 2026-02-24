@@ -7,6 +7,8 @@ from .views_reporting import ZabbixMonthlyReportView
 from .views_sla_ai import ZabbixSlaAnalyzeView
 from .views_alarms import ZabbixSyncAlarmsView, ZabbixSyncAlertsSentView, ZabbixAlarmsListView, ZabbixAlarmEventsListView, ZabbixAlertsSentListView
 from .views_triggers import ZabbixTriggersView, ZabbixSyncTriggersView
+from zabbix_integration.views_tree import ZabbixTreeView
+from zabbix_integration.views import ZabbixSyncAllItemsView
 
 router = DefaultRouter()
 router.register(r"zabbix/connections", ZabbixConnectionViewSet, basename="zabbix-connections")
@@ -31,5 +33,7 @@ urlpatterns = [
     path("zabbix/sync/hosts/", ZabbixSyncHostsView.as_view(), name="zabbix-sync-hosts"),
     path("zabbix/triggers/", ZabbixTriggersView.as_view(), name="zabbix-triggers"),
     path("zabbix/sync/triggers/", ZabbixSyncTriggersView.as_view(), name="zabbix-sync-triggers"),
+    path("zabbix/tree/", ZabbixTreeView.as_view()),
+    path("zabbix/sync/all-items/", ZabbixSyncAllItemsView.as_view(), name="zabbix-sync-all-items"),
 ]
 urlpatterns += router.urls

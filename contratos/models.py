@@ -181,6 +181,14 @@ class ContratoTarefa(models.Model):
     gerada_por_ia = models.BooleanField(default=True)
     raw = models.JSONField(blank=True, null=True)
 
+    usuario_responsavel = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="tarefas_responsavel",
+    )
+
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 

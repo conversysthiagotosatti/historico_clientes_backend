@@ -47,10 +47,10 @@ class ZabbixHostAdmin(admin.ModelAdmin):
 
 @admin.register(ZabbixTrigger)
 class ZabbixTriggerAdmin(admin.ModelAdmin):
-    list_display = ("id", "triggerid", "cliente", "descricao", "prioridade", "status", "ultima_alteracao")
-    list_filter = ("cliente", "triggerid", "prioridade", "status")
-    search_fields = ("descricao", "triggerid", "cliente__nome")
-    ordering = ("-ultima_alteracao",)
+    list_display = ("id", "triggerid", "cliente", "name", "severity", "enabled", "lastchange")
+    list_filter = ("triggerid", "cliente", "name", "severity", "enabled", "lastchange")
+    search_fields = ("name", "severity", "enabled", "lastchange")
+    ordering = ("-lastchange",)
 
     autocomplete_fields = ("cliente",)
     def hosts_associados(self, obj):

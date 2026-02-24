@@ -3,6 +3,7 @@ from django.db import transaction
 
 from zabbix_integration.models import ZabbixHost, ZabbixItem, ZabbixHistory, ZabbixEvent, ZabbixTrigger
 from zabbix_integration.services.sync import get_client_for_cliente
+from typing import Any
 
 
 def _dt_from_epoch(epoch: str | int):
@@ -25,12 +26,13 @@ def sync_items(
         output=["hostid"],
         filter={"host": host}
     )
+    print(f"Host encontrado: {host_result}")
 
     if not host_result:
         return {"error": "Host não encontrado no Zabbix"}
 
     hostid = host_result[0]["hostid"]
-
+    print(f"HostID encontrado: {hostid}")
     params = {
         "output": ["itemid", 
                    "name", 
@@ -69,12 +71,8 @@ def sync_items(
     items = client.item_get(**params)
     saved = 0
     for it in items:
-        #print(it)
-        hostok = it.get("hostids") and it["hostids"][0]
-        print(f"Item {it['itemid']} has hostid {hostok}")
-        host = ZabbixHost.objects.filter(hostid=hostok).first() if hostok else None
-        print(f"Hostid {hostok} maps to host {host}")
-        print(f"Found host {hostok} for item {it['itemid']}")
+        host = ZabbixHost.objects.filter(hostid=hostid).first()
+        print(host)
         ZabbixItem.objects.update_or_create(
             cliente_id=cliente_id,
             itemid=it["itemid"],
@@ -93,7 +91,7 @@ def sync_items(
         saved += 1
 
     return {
-        "host": host,
+        "host": hostid,
         "total_encontrados": len(items),
         "salvos": saved,
         "filtros_aplicados": filtros or {}
@@ -101,85 +99,92 @@ def sync_items(
 
 
 @transaction.atomic
-def sync_events(cliente_id: int, since_hours: int = 24):
-    """
-    Sincroniza eventos (event.get) das últimas N horas.
-    """
+def sync_events(
+    cliente_id: int,
+    triggerid: str,
+    since_hours: int = 240,
+    filtros: dict | None = None
+) -> dict:
+
     client = get_client_for_cliente(cliente_id)
 
-    time_from = int((datetime.now(tz=timezone.utc) - timedelta(hours=since_hours)).timestamp())
+    # 🔎 Valida trigger local
+    trigger_obj = ZabbixTrigger.objects.filter(
+        cliente_id=cliente_id,
+        triggerid=triggerid
+    ).first()
 
-    events = client.event_get(
-        source=0,  # ✅ trigger events
-        object=0,
-        #objectids=["13015"],
-        output=[
-                "eventid",
-                "source",
-                "object",
-                "objectid",
-                "clock",
-                "value",
-                "acknowledged",
-                "ns",
-                "name",
-                "severity",
-                "r_eventid",
-                "c_eventid",
-                "correlationid",
-                "userid",
-                "opdata",
-                "suppressed",
-                "urls",
-                ],
-        time_from=time_from,
-        sortfield=["clock"],
-        sortorder="DESC",
-        limit=1,
+    if not trigger_obj:
+        return {"error": "Trigger não encontrada localmente. Execute sync_triggers primeiro."}
+
+    # 🔎 Período
+    time_from = int(
+        (datetime.now(tz=timezone.utc) - timedelta(hours=since_hours)).timestamp()
     )
-    print(f"eventos: {events}")
-    local_hosts = {h.hostid: h for h in ZabbixHost.objects.filter(cliente_id=cliente_id)}
+
+    params = {
+        "source": 0,  # trigger events
+        "object": 0,
+        "objectids": [triggerid],
+        "output": [
+            "eventid",
+            "clock",
+            "value",
+            "acknowledged",
+            "severity",
+            "name",
+            "r_eventid",
+            "c_eventid",
+            "userid",
+            "opdata",
+        ],
+        "time_from": time_from,
+        "sortfield": ["clock"],
+        "sortorder": "DESC",
+    }
+
+    # 🔎 Aplicando filtros
+    if filtros:
+        filter_dict = {}
+
+        if filtros.get("severity") is not None:
+            filter_dict["severity"] = str(filtros["severity"])
+
+        if filtros.get("acknowledged") is not None:
+            filter_dict["acknowledged"] = str(filtros["acknowledged"])
+
+        if filtros.get("value") is not None:
+            filter_dict["value"] = str(filtros["value"])
+
+        if filter_dict:
+            params["filter"] = filter_dict
+
+    events = client.event_get(**params)
+
+    saved = 0
 
     for ev in events:
-        print(f"Syncing event {ev}")
-        host = None
-        hostname = None
-        hostid = None
-
-        hosts = ev.get("hosts") or []
-        #print(f"Event {ev}")
-        if hosts:
-            hostid = str(hosts[0]["hostid"])
-            hostname = hosts[0].get("host")
-            host = local_hosts.get(hostid)
-
-        triggerid = ev.get("objectid") if ev.get("object") == "0" else None
-        if triggerid:
-            trigger = ZabbixTrigger.objects.filter(cliente_id=cliente_id, triggerid=triggerid).first()
-            if trigger and trigger.hosts.exists():
-                host = trigger.hosts.first()
-                hostname = host.hostname
-        else:
-            triggerid = None
-
         ZabbixEvent.objects.update_or_create(
-            eventid=ev["eventid"],
+            cliente_id=cliente_id,
+            eventid=str(ev["eventid"]),
             defaults={
-                "cliente_id": cliente_id,
+                "trigger": trigger_obj,
                 "name": ev.get("name"),
                 "severity": int(ev.get("severity") or 0),
                 "acknowledged": bool(int(ev.get("acknowledged") or 0)),
+                "value": int(ev.get("value") or 0),
                 "clock": _dt_from_epoch(ev["clock"]),
-                "host": host,
-                "hostid": host,
-                "hostname": hostname,
                 "raw": ev,
-                "objectid": ev.get("objectid"),
-                "objectname": ev.get("objectname"),
-                "trigger":triggerid,
             },
         )
+        saved += 1
 
+    return {
+        "trigger": triggerid,
+        "total_encontrados": len(events),
+        "salvos": saved,
+        "filtros_aplicados": filtros or {},
+    }
 
 @transaction.atomic
 def sync_history(cliente_id: int, itemids: list[str], time_from: datetime, time_till: datetime):

@@ -10,6 +10,7 @@ from .serializers import ZabbixConnectionSerializer
 from .services.sync import get_client_for_cliente
 from .services.sync_level1 import sync_level1
 from .servico import sync_hosts
+from .sync_all_items_y_hosts import sync_all_items_by_hosts
 
 
 class ZabbixConnectionViewSet(ModelViewSet):
@@ -120,3 +121,25 @@ class ZabbixSyncHostsView(APIView):
             "detail": "Hosts sincronizados",
             **summary
         })
+    
+class ZabbixSyncAllItemsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        cliente = request.data.get("cliente")
+
+        if not cliente:
+            return Response({"detail": "cliente é obrigatório"}, status=400)
+
+        filtros = {
+            "status": request.data.get("status"),
+            "key_": request.data.get("key_"),
+            "name": request.data.get("name"),
+        }
+
+        summary = sync_all_items_by_hosts(
+            cliente_id=int(cliente),
+            filtros=filtros
+        )
+
+        return Response(summary)

@@ -59,10 +59,39 @@ class ZabbixSyncEventsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        cliente = int(request.data.get("cliente"))
-        since_hours = int(request.data.get("since_hours", 240))
-        sync_events(cliente_id=cliente, since_hours=since_hours)
-        return Response({"status": "ok"})
+        data = request.data
+
+        cliente = data.get("cliente")
+        triggerid = data.get("trigger")
+
+        if not cliente:
+            return Response(
+                {"detail": "Campo 'cliente' é obrigatório"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not triggerid:
+            return Response(
+                {"detail": "Campo 'trigger' é obrigatório"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        since_hours = int(data.get("since_hours", 240))
+
+        filtros = {
+            "severity": data.get("severity"),
+            "acknowledged": data.get("acknowledged"),
+            "value": data.get("value"),
+        }
+
+        summary = sync_events(
+            cliente_id=int(cliente),
+            triggerid=str(triggerid),
+            since_hours=since_hours,
+            filtros=filtros
+        )
+
+        return Response(summary)
 
 
 class ZabbixSyncHistoryView(APIView):
