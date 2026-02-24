@@ -54,11 +54,16 @@ class ZabbixTrigger(models.Model):
     priority = models.IntegerField(null=True)
     value = models.IntegerField(null=True)
     status = models.BooleanField(null=True)
-    lastchange = models.DateTimeField(null=True)
 
     raw = models.JSONField(null=True)
-    items = models.ForeignKey("zabbix_integration.ZabbixItem", on_delete=models.CASCADE, related_name="triggers", null=True)
     
+    # 🔥 AGORA CORRETO
+    items = models.ManyToManyField(
+        "zabbix_integration.ZabbixItem",
+        related_name="triggers",
+        blank=True,
+    )
+
     class Meta:
         unique_together = ("cliente", "triggerid")
 
@@ -140,6 +145,8 @@ class ZabbixEvent(models.Model):
 
     hostid = models.CharField(max_length=50, blank=True, null=True)  # redundante mas útil para consultas sem join
     raw = models.JSONField(blank=True, null=True)
+
+    value = models.IntegerField(blank=True, null=True)
 
     hostname = models.CharField(max_length=255, blank=True, null=True)
     objectid = models.CharField(max_length=50, blank=True, null=True)
