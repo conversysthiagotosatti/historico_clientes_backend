@@ -14,6 +14,8 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 from datetime import timedelta
+from celery.schedules import crontab
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -169,3 +171,16 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+CELERY_BEAT_SCHEDULE = {
+
+    "full-sync-diario-02h": {
+        "task": "zabbix_integration.tasks.full_sync_all_clients",
+        "schedule": crontab(hour=2, minute=0),
+    },
+
+    "incremental-sync-5-min": {
+        "task": "zabbix_integration.tasks.incremental_sync_all_clients",
+        "schedule": 300.0,
+    },
+}

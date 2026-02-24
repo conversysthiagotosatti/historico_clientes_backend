@@ -10,7 +10,6 @@ from .serializers import ZabbixConnectionSerializer
 from .services.sync import get_client_for_cliente
 from .services.sync_level1 import sync_level1
 from .servico import sync_hosts
-from .sync_all_items_y_hosts import sync_all_items_by_hosts
 
 
 class ZabbixConnectionViewSet(ModelViewSet):

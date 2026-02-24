@@ -91,21 +91,35 @@ def report_obrigacoes_contratuais(contrato_id: int) -> dict:
 # 4.4 Tarefas por Responsável
 def report_tarefas_por_responsavel(cliente_id: int | None = None, days: int = 90) -> dict:
     start, end = parse_date_range(days=days)
-
+ 
     qs = qs_tarefas(cliente_id=cliente_id).filter(criado_em__gte=start, criado_em__lte=end)
     rows = (
-        qs.values("usuario_responsavel", "status")
+        qs.values(
+            "usuario_responsavel",
+            "usuario_responsavel__first_name",
+            "usuario_responsavel__last_name",
+            "usuario_responsavel__username",
+            "responsavel_sugerido",
+            "status",
+        )
         .annotate(qt=Count("id"))
         .order_by("usuario_responsavel", "status")
     )
-
-    out = defaultdict(lambda: {"usuario_responsavel": None, "por_status": defaultdict(int), "total": 0})
+ 
+    out = defaultdict(lambda: {"usuario_responsavel": None, "responsavel_sugerido": None, "por_status": defaultdict(int), "total": 0})
     for r in rows:
-        resp = r["usuario_responsavel"] or "NÃO DEFINIDO"
+        uid = r["usuario_responsavel"]
+        first = r["usuario_responsavel__first_name"] or ""
+        last = r["usuario_responsavel__last_name"] or ""
+        username = r["usuario_responsavel__username"] or ""
+        nome = f"{first} {last}".strip() or username or None
+ 
+        resp = nome or "NÃO DEFINIDO"
         out[resp]["usuario_responsavel"] = resp
+        out[resp]["responsavel_sugerido"] = r["responsavel_sugerido"] or out[resp]["responsavel_sugerido"]
         out[resp]["por_status"][r["status"]] += r["qt"]
         out[resp]["total"] += r["qt"]
-
+ 
     items = list(out.values())
     items.sort(key=lambda x: x["total"], reverse=True)
     return {"periodo": {"inicio": start.isoformat(), "fim": end.isoformat()}, "items": items}

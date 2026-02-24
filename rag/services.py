@@ -28,7 +28,7 @@ def _build_vectorstore_for_cliente(cliente_id: int) -> FAISS:
             )
 
     #embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-    OPENAI_API_KEY = get_parametro_cliente("1", "OPEN_API_KEY")#os.getenv("OPENAI_API_KEY")
+    OPENAI_API_KEY = get_parametro_cliente(str(cliente_id), "OPEN_API_KEY")#os.getenv("OPENAI_API_KEY")
     print(f"OPENAI_API_KEY: {OPENAI_API_KEY}")
     embeddings = OpenAIEmbeddings(
                     model="text-embedding-3-small",
@@ -54,7 +54,7 @@ def rag_answer(cliente_id: int, pergunta: str, k: int = 4) -> dict:
     )
 
     #llm = ChatOpenAI(model="gpt-4.1-mini")  # ajuste o modelo conforme seu plano/latência
-    OPENAI_API_KEY = get_parametro_cliente("1", "OPEN_API_KEY")
+    OPENAI_API_KEY = get_parametro_cliente(str(cliente_id), "OPEN_API_KEY")
     llm = ChatOpenAI(
                     model="gpt-4.1-mini",
                     api_key=OPENAI_API_KEY,

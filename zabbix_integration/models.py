@@ -273,3 +273,8 @@ class ZabbixAlertSent(models.Model):
         indexes = [
             models.Index(fields=["cliente", "clock"]),
         ]
+
+class ZabbixSyncControl(models.Model):
+    cliente = models.ForeignKey("clientes.Cliente", on_delete=models.CASCADE) #models.OneToOneField("Cliente", on_delete=models.CASCADE)
+    last_full_sync = models.DateTimeField(null=True)
+    last_incremental_sync = models.DateTimeField(null=True)
