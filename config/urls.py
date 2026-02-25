@@ -9,6 +9,7 @@ from contratos.views import ContratoViewSet, ContratoTarefaViewSet, ContratoClau
 from contratos.views_arquivo import ContratoArquivoViewSet
 from tarefas.views import TarefaViewSet, ApontamentoViewSet
 from auth_api import views as auth_views
+from accounts.views_equipes import EquipeViewSet, EquipeMembroViewSet
 
 router = DefaultRouter()
 router.register(r"clientes", ClienteViewSet)
@@ -19,6 +20,8 @@ router.register(r"contratos-arquivos", ContratoArquivoViewSet, basename="contrat
 #router.register(r"tarefas", TarefaViewSet)
 router.register(r"tarefas", TarefaViewSet, basename="tarefas")
 router.register(r"apontamentos", ApontamentoViewSet)
+router.register(r"equipes", EquipeViewSet)
+router.register(r"equipes-membros", EquipeMembroViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),

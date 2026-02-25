@@ -1,4 +1,4 @@
-TOOLS = [
+CONTRATOS_TOOLS = [
     {
         "type": "function",
         "name": "contratos_listar",
@@ -70,10 +70,56 @@ TOOLS = [
     },
 ]
 
+ZABBIX_TOOLS = [
+    {
+        "type": "function",
+        "name": "zabbix_dashboard_executivo",
+        "description": "Retorna dashboard executivo de monitoramento do cliente.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "cliente_id": {"type": "integer"}
+            },
+            "required": ["cliente_id"],
+        },
+    },
+    {
+        "type": "function",
+        "name": "zabbix_relatorio_incidentes",
+        "description": "Retorna relatório de incidentes por período.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "cliente_id": {"type": "integer"},
+                "dias": {"type": "integer", "default": 30},
+            },
+            "required": ["cliente_id"],
+        },
+    },
+    {
+        "type": "function",
+        "name": "zabbix_top_hosts_problemas",
+        "description": "Lista os hosts com maior número de eventos no período.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "cliente_id": {"type": "integer"},
+                "horas": {"type": "integer", "default": 24},
+            },
+            "required": ["cliente_id"],
+        },
+    },
+]
+
+TOOLS = CONTRATOS_TOOLS + ZABBIX_TOOLS
+
 OPENAI_TO_INTERNAL = {
     "contratos_listar": "contratos.listar",
     "contratos_get": "contratos.get",
     "contratos_arquivos_listar": "contratos.arquivos_listar",
     "contratos_extrair_clausulas": "contratos.extrair_clausulas",
     "contratos_gerar_tarefas": "contratos.gerar_tarefas",
+    "zabbix_dashboard_executivo": "zabbix.dashboard_executivo",
+    "zabbix_relatorio_incidentes": "zabbix.relatorio_incidentes",
+    "zabbix_top_hosts_problemas": "zabbix.top_hosts_problemas",
 }
