@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "accounts",
     "django_extensions",
     "django.contrib.postgres",
+    "contratos_ai",
 ]
 
 
