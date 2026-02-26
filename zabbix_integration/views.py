@@ -142,3 +142,4 @@ class ZabbixSyncAllItemsView(APIView):
         )
 
         return Response(summary)
+    

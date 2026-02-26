@@ -103,3 +103,6 @@ class ZabbixClient:
 
     def alert_get(self, **kwargs):
         return self._call("alert.get", kwargs)
+    
+    def hostgroup_get(self, **kwargs):
+        return self._call("hostgroup.get", kwargs)

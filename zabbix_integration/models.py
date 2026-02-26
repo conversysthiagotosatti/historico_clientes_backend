@@ -19,6 +19,23 @@ class ZabbixConnection(models.Model):
     def __str__(self):
         return f"ZabbixConnection({self.cliente.nome})"
 
+class ZabbixHostGroup(models.Model):
+    cliente = models.ForeignKey("clientes.Cliente", on_delete=models.CASCADE)
+
+    groupid = models.CharField(max_length=50)
+    name = models.CharField(max_length=255)
+
+    raw = models.JSONField(blank=True, null=True)
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("cliente", "groupid")
+
+    def __str__(self):
+        return f"{self.name} ({self.groupid})"
+    
 
 class ZabbixHost(models.Model):
     cliente = models.ForeignKey("clientes.Cliente", on_delete=models.CASCADE)
@@ -29,6 +46,8 @@ class ZabbixHost(models.Model):
 
     ip = models.CharField(max_length=50, blank=True, null=True)
     objectid = models.CharField(max_length=50, blank=True, null=True)
+
+    groups = models.ManyToManyField(ZabbixHostGroup, related_name="hosts", blank=True)
     raw = models.JSONField(default=dict, blank=True)
 
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -194,14 +213,22 @@ class ZabbixUser(models.Model):
         return self.username
     
 class ZabbixSLA(models.Model):
+    PERIOD_CHOICES = (
+        (0, "daily"),
+        (1, "weekly"),
+        (2, "monthly"),
+    )
+
     cliente = models.ForeignKey("clientes.Cliente", on_delete=models.CASCADE)
     slaid = models.CharField(max_length=50)
     name = models.CharField(max_length=255)
 
     # campos típicos (podem variar conforme versão/config)
-    period = models.IntegerField(blank=True, null=True)
+    period = models.IntegerField(choices=PERIOD_CHOICES, blank=True, null=True)
     slo = models.DecimalField(max_digits=6, decimal_places=3, blank=True, null=True)
     status = models.IntegerField(blank=True, null=True)
+    effective_date = models.DateTimeField(null=True, blank=True)
+    periodo = models.DateTimeField(blank=True, null=True)
 
     raw = models.JSONField(blank=True, null=True)
 

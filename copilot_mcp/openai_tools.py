@@ -72,16 +72,18 @@ CONTRATOS_TOOLS = [
 
 ZABBIX_TOOLS = [
     {
-        "type": "function",
-        "name": "zabbix_dashboard_executivo",
-        "description": "Retorna dashboard executivo de monitoramento do cliente.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "cliente_id": {"type": "integer"}
-            },
-            "required": ["cliente_id"],
+    "type": "function",
+    "name": "zabbix_dashboard_executivo",
+    "description": "Dashboard executivo consolidado do cliente com SLA, disponibilidade, incidentes e análise automática.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+        "cliente_id": { "type": "integer" },
+        "ano": { "type": "integer" },
+        "mes": { "type": "integer" }
         },
+        "required": ["cliente_id", "ano", "mes"]
+    }
     },
     {
         "type": "function",

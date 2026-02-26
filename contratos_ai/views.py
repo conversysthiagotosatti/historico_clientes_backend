@@ -8,12 +8,13 @@ from .models import ClausulaBase, DocumentoGerado
 from rest_framework import status
 from .services.clausula_ai import gerar_clausula_json
 from .services.contrato_ai import gerar_contrato_por_prompt
+from.services.exportacao import exportar_contrato, exportar_contrato_pdf_completo
 from .serializers import (
     ClausulaBaseSerializer,
     DocumentoGeradoSerializer
 )
 from django.http import FileResponse
-from .services.exportacao import exportar_contrato
+from .services.exportacao import exportar_contrato, exportar_contrato_pdf_completo
 
 class GerarContratoAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -189,7 +190,8 @@ class ExportarContratoAPIView(APIView):
     def get(self, request, documento_id):
         formato = request.query_params.get("formato", "pdf")
 
-        caminho = exportar_contrato(documento_id, formato)
+        #caminho = exportar_contrato(documento_id, formato)
+        caminho = exportar_contrato_pdf_completo(documento_id)
 
         return FileResponse(
             open(caminho, "rb"),

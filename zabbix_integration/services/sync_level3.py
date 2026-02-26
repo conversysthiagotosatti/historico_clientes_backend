@@ -1,6 +1,12 @@
 from django.db import transaction
 from zabbix_integration.services.sync import get_client_for_cliente
 from zabbix_integration.models import ZabbixTemplate, ZabbixUser, ZabbixSLA
+from datetime import datetime, timezone
+
+def convert_epoch_to_datetime(value):
+    if not value:
+        return None
+    return datetime.fromtimestamp(int(value), tz=timezone.utc)
 
 
 @transaction.atomic
@@ -51,11 +57,20 @@ def sync_sla(cliente_id: int):
 
     # ⚠️ Pode variar por versão. Mantemos raw para compatibilidade.
     slas = client.sla_get(
-        output="extend",
+        output=["slaid",
+                "name",
+                "period",
+                "slo",
+                "effective_date",
+                "timezone",
+                "status",
+                "description"
+                ],
         sortfield="name",
     )
 
     for s in slas:
+        effective_date = convert_epoch_to_datetime(s.get("effective_date"))
         ZabbixSLA.objects.update_or_create(
             cliente_id=cliente_id,
             slaid=s.get("slaid") or s.get("id") or "",  # compat
@@ -65,5 +80,6 @@ def sync_sla(cliente_id: int):
                 "slo": s.get("slo"),
                 "status": int(s["status"]) if s.get("status") is not None else None,
                 "raw": s,
+                "effective_date": effective_date,
             },
         )
