@@ -1,8 +1,8 @@
 from openai import OpenAI
 
-client = OpenAI()
-
 def gerar_resumo_executivo(dados: dict) -> str:
+
+    client = OpenAI()
 
     prompt = f"""
     Gere um resumo executivo para diretoria com base nos seguintes indicadores:

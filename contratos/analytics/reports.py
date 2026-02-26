@@ -1,8 +1,7 @@
-# contratos/analytics/reports.py
 from __future__ import annotations
 
 from collections import defaultdict
-from django.db.models import Count, Sum, Q
+from django.db.models import Count, Sum, Q, DecimalField
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 
