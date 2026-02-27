@@ -171,6 +171,11 @@ class ZabbixEvent(models.Model):
     objectid = models.CharField(max_length=50, blank=True, null=True)
     objectname = models.CharField(max_length=255, blank=True, null=True)
 
+    r_eventid = models.CharField(max_length=50, blank=True, null=True)  # para relacionar com AlarmEvent se necessário
+    c_eventid = models.CharField(max_length=50, blank=True, null=True)  # para relacionar com AlarmEvent se necessário
+
+    opdata = models.CharField(max_length=255, blank=True, null=True)  # operação: trigger, discovery, auto-reg, etc.
+    
     class Meta:
         indexes = [
             models.Index(fields=["cliente", "clock"]),

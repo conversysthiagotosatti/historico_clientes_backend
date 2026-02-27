@@ -50,7 +50,7 @@ class ZabbixHostAdmin(admin.ModelAdmin):
 class ZabbixTriggerAdmin(admin.ModelAdmin):
     list_display = ("id", "triggerid", "cliente", "name", "severity", "enabled", "lastchange")
     list_filter = ("triggerid", "cliente", "name", "severity", "enabled", "lastchange")
-    search_fields = ("name", "severity", "enabled", "lastchange")
+    search_fields = ("name", "severity", "enabled", "lastchange", "id", "triggerid")
     ordering = ("-lastchange",)
 
     autocomplete_fields = ("cliente",)
