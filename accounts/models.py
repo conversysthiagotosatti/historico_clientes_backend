@@ -66,3 +66,27 @@ class UserProfile(models.Model):
         if self.tipo_usuario == self.Tipo.INTERNO and self.cliente_id:
             from django.core.exceptions import ValidationError
             raise ValidationError({"cliente": "Usuário INTERNO não deve estar vinculado a cliente."})
+
+class Modulo(models.Model):
+    nome = models.CharField(max_length=100)
+    descricao = models.TextField()
+    ativo = models.BooleanField(default=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.nome
+
+class ModuloPermissao(models.Model):
+    modulo = models.ForeignKey(Modulo, on_delete=models.CASCADE, related_name="permissoes")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="permissoes")
+    cliente = models.ForeignKey("clientes.Cliente", on_delete=models.CASCADE, related_name="permissoes", null=True, blank=True)
+    permissao = models.BooleanField(default=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("modulo", "user")
+
+    def __str__(self):
+        return f"{self.modulo} - {self.user} - {self.permissao}"

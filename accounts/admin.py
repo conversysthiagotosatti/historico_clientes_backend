@@ -2,7 +2,12 @@ from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 
-from .models import UserClienteMembership, UserProfile, Equipe, EquipeMembro
+from .models import (UserClienteMembership,
+                    UserProfile, 
+                    Equipe, 
+                    EquipeMembro,
+                    Modulo, 
+                    ModuloPermissao)
 #from .models_equipes import 
 
 User = get_user_model()
@@ -54,3 +59,86 @@ class EquipeMembroAdmin(admin.ModelAdmin):
     list_display = ("equipe", "user", "papel", "ativo", "criado_em")
     list_filter = ("papel", "ativo")
     search_fields = ("user__username", "equipe__nome")
+
+# ==========================================
+# 🔹 INLINE DE PERMISSÕES
+# ==========================================
+
+class ModuloPermissaoInline(admin.TabularInline):
+    model = ModuloPermissao
+    extra = 0
+    autocomplete_fields = ("user",)
+    readonly_fields = ("criado_em", "atualizado_em")
+
+
+# ==========================================
+# 🔹 MODULO
+# ==========================================
+
+@admin.register(Modulo)
+class ModuloAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "nome",
+        "ativo",
+        "criado_em",
+        "atualizado_em",
+    )
+
+    list_filter = (
+        "ativo",
+        "criado_em",
+    )
+
+    search_fields = (
+        "nome",
+        "descricao",
+    )
+
+    readonly_fields = (
+        "criado_em",
+        "atualizado_em",
+    )
+
+    inlines = [ModuloPermissaoInline]
+
+
+# ==========================================
+# 🔹 MODULO PERMISSÃO
+# ==========================================
+
+@admin.register(ModuloPermissao)
+class ModuloPermissaoAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "modulo",
+        "user",
+        "permissao",
+        "criado_em",
+    )
+
+    list_filter = (
+        "permissao",
+        "modulo",
+        "criado_em",
+    )
+
+    search_fields = (
+        "modulo__nome",
+        "user__username",
+        "user__email",
+    )
+
+    autocomplete_fields = (
+        "modulo",
+        "user",
+    )
+
+    readonly_fields = (
+        "criado_em",
+        "atualizado_em",
+    )
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related("modulo", "user")

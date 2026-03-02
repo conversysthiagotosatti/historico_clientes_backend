@@ -167,7 +167,7 @@ class ContratoTarefa(models.Model):
         CANCELADA = "CANCELADA", "Cancelada"
 
     contrato = models.ForeignKey("contratos.Contrato", on_delete=models.CASCADE, related_name="tarefas_contrato")
-    clausula = models.ForeignKey("contratos.ContratoClausula", on_delete=models.CASCADE, related_name="tarefas")
+    clausula = models.ForeignKey("contratos.ContratoClausula", on_delete=models.CASCADE, related_name="tarefas", null=True, blank=True)
 
     titulo = models.CharField(max_length=200)
     descricao = models.TextField(blank=True, null=True)
