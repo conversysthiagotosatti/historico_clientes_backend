@@ -40,6 +40,7 @@ urlpatterns = [
     path("api/contratos-ai/", include("contratos_ai.urls")),
     path("api/notificacoes/", include("notificacoes.urls")),
     path("zabbix/", include("zabbix_integration.api.urls")),
+    path("api/softdesk/", include("softdesk.urls")),
 ]
 
 if settings.DEBUG:

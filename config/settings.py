@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "contratos_ai",
     "notificacoes",
+    "softdesk",
 ]
 
 
