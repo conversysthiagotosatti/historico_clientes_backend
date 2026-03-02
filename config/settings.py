@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "notificacoes",
     "softdesk",
     "helpdesk",
+    "network_scripts",
 ]
 
 
@@ -188,3 +189,12 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": 300.0,
     },
 }
+
+# =====================================
+# EMAIL CONFIG - OUTLOOK
+# =====================================
+AZURE_TENANT_ID = os.getenv("AZURE_TENANT_ID")
+AZURE_CLIENT_ID = os.getenv("AZURE_CLIENT_ID")
+AZURE_CLIENT_SECRET = os.getenv("AZURE_CLIENT_SECRET")
+
+AZURE_SENDER_EMAIL = "thiago.tosatti@conversys.global"
