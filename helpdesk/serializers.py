@@ -17,6 +17,12 @@ class SetorSerializer(serializers.ModelSerializer):
         model = Setor
         fields = '__all__'
 
+
+class ChamadoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Chamado
+        fields = "__all__"
+
 class ChamadoMensagemSerializer(serializers.ModelSerializer):
     autor_detalhes = UserSimpleSerializer(source='autor', read_only=True)
 

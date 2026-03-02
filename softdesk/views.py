@@ -7,6 +7,7 @@ from .services.chamados_service import ChamadoService
 from .services.import_service import ImportSoftdeskService
 from .models import SoftdeskChamado
 from .serializers import SoftdeskChamadoSerializer
+from helpdesk.serializers import ChamadoSerializer
 
 
 # 🔹 1️⃣ Consulta direta na API Softdesk (sem salvar)
@@ -61,14 +62,23 @@ class SoftdeskImportarAPIView(APIView):
             )
 
         try:
-            chamado = ImportSoftdeskService.importar_chamado(
+            result = ImportSoftdeskService.importar_chamado(
                 int(cliente_id),
                 int(codigo)
             )
 
-            serializer = SoftdeskChamadoSerializer(chamado)
+            softdesk_serializer = SoftdeskChamadoSerializer(
+                result["softdesk"]
+            )
 
-            return Response(serializer.data)
+            chamado_serializer = ChamadoSerializer(
+                result["chamado"]
+            )
+
+            return Response({
+                "softdesk": softdesk_serializer.data,
+                "chamado": chamado_serializer.data
+            })
 
         except Exception as e:
             return Response(

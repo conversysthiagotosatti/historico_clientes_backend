@@ -28,7 +28,7 @@ class ChamadoPrioridade(models.TextChoices):
 class Chamado(models.Model):
     titulo = models.CharField(max_length=255)
     descricao = models.TextField()
-    setor = models.ForeignKey(Setor, on_delete=models.PROTECT, related_name="chamados")
+    setor = models.ForeignKey(Setor, on_delete=models.PROTECT, related_name="chamados", null=True, blank=True)
     
     status = models.CharField(max_length=20, choices=ChamadoStatus.choices, default=ChamadoStatus.ABERTO)
     prioridade = models.CharField(max_length=20, choices=ChamadoPrioridade.choices, default=ChamadoPrioridade.MEDIA)

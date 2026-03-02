@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "contratos_ai",
     "notificacoes",
     "softdesk",
+    "helpdesk",
 ]
 
 

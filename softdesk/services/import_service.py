@@ -1,56 +1,60 @@
 from django.db import transaction
-from datetime import datetime
 from django.utils import timezone
+from datetime import datetime
 
 from softdesk.models import SoftdeskChamado
+from helpdesk.models import Chamado, Setor, ChamadoStatus, ChamadoPrioridade
+from django.contrib.auth import get_user_model
+
 from .chamados_service import ChamadoService
+
+User = get_user_model()
 
 
 class ImportSoftdeskService:
 
     @staticmethod
     @transaction.atomic
-    def importar_chamado(cliente_id: int, codigo: int) -> SoftdeskChamado:
+    def importar_chamado(cliente_id: int, codigo: int):
 
+        # 🔹 1️⃣ Buscar na API
         data = ChamadoService.buscar_por_codigo(cliente_id, codigo)
 
         if not data:
             raise Exception("Chamado não encontrado na API")
 
-        chamado = data[0] if isinstance(data, list) else data
+        chamado_api = data[0] if isinstance(data, list) else data
 
-        data_abertura = ImportSoftdeskService._parse_datetime(
-            chamado.get("data_abertura")
-        )
-
-        data_fechamento = ImportSoftdeskService._parse_datetime(
-            chamado.get("data_fechamento")
-        )
-
-        obj, _ = SoftdeskChamado.objects.update_or_create(
+        # 🔹 2️⃣ Gravar na tabela SoftdeskChamado (espelho bruto)
+        softdesk_obj, _ = SoftdeskChamado.objects.update_or_create(
+            cliente_id=cliente_id,
             codigo=codigo,
             defaults={
-                "cliente_id": cliente_id,
-                "titulo": chamado.get("titulo") or chamado.get("assunto"),
-                "status": chamado.get("status"),
-                "cliente_codigo": chamado.get("cliente_codigo"),
-                "data_abertura": data_abertura,
-                "data_fechamento": data_fechamento,
-                "raw": chamado,
+                "titulo": chamado_api.get("titulo"),
+                "status": chamado_api.get("status"),
+                "raw": chamado_api,
             }
         )
 
-        return obj
+        # 🔹 3️⃣ Mapear dados para tabela interna Chamado
 
-    @staticmethod
-    def _parse_datetime(valor):
-        if not valor:
-            return None
+        titulo = chamado_api.get("titulo") or f"Chamado Softdesk #{codigo}"
+        descricao = chamado_api.get("descricao") or chamado_api.get("detalhes") or "Importado do Softdesk"
 
-        try:
-            return datetime.strptime(
-                valor,
-                "%Y-%m-%d %H:%M:%S"
-            ).replace(tzinfo=timezone.utc)
-        except Exception:
-            return None
+        # ⚠️ Ajuste conforme sua regra real
+        setor = Setor.objects.first()
+        solicitante = User.objects.first()
+
+        chamado_interno = Chamado.objects.create(
+            titulo=titulo,
+            descricao=descricao,
+            setor=setor,
+            solicitante=solicitante,
+            status=ChamadoStatus.ABERTO,
+            prioridade=ChamadoPrioridade.MEDIA,
+        )
+
+        return {
+            "softdesk": softdesk_obj,
+            "chamado": chamado_interno
+        }
