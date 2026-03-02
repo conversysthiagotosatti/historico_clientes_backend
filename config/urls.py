@@ -41,6 +41,7 @@ urlpatterns = [
     path("api/notificacoes/", include("notificacoes.urls")),
     path("zabbix/", include("zabbix_integration.api.urls")),
     path("api/softdesk/", include("softdesk.urls")),
+    path("api/helpdesk/", include("helpdesk.urls")),
 ]
 
 if settings.DEBUG:
