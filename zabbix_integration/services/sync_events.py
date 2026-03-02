@@ -14,7 +14,7 @@ def sync_events_incremental(cliente_id: int, last_sync=None):
     client = get_client_for_cliente(cliente_id)
 
     if not last_sync:
-        last_sync = datetime.now(tz=timezone.utc) - timedelta(hours=1)
+        last_sync = datetime.now(tz=timezone.utc) - timedelta(hours=720)
 
     timestamp = int(last_sync.timestamp())
 
@@ -25,9 +25,9 @@ def sync_events_incremental(cliente_id: int, last_sync=None):
     )
 
     total_events = 0
-
+    print(chunked(triggerids, BATCH_TRIGGERS))
     for trigger_chunk in chunked(triggerids, BATCH_TRIGGERS):
-
+        print(f"Processando chunk de triggers: {trigger_chunk}")
         events = client.event_get(
             source=0,
             object=0,
@@ -41,6 +41,7 @@ def sync_events_incremental(cliente_id: int, last_sync=None):
                 "acknowledged",
                 "severity",
                 "name",
+                "objectid",
             ],
             sortfield="clock",
             sortorder="ASC",
@@ -72,6 +73,7 @@ def sync_events_incremental(cliente_id: int, last_sync=None):
                     "value": int(ev.get("value") or 0),
                     "clock": dt_from_epoch(ev.get("clock")),
                     "raw": ev,
+                    "objectid": str(ev.get("objectid")),
                 },
             )
 

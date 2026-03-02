@@ -1,39 +1,41 @@
-from zabbix_integration.models import ZabbixHost
-from zabbix_integration.services.sync import get_client_for_cliente
+from zabbix_integration.models import ZabbixHost, ZabbixHostGroup
+from .sync import get_client_for_cliente
 
 
-def sync_hosts_enterprise(cliente_id):
+def sync_hosts(cliente_id: int):
+    print(f"Iniciando sincronização de hosts para cliente_id={cliente_id}")
     client = get_client_for_cliente(cliente_id)
 
-    hosts = client.host_get(output="extend")
-
-    to_create = []
-    existing = {
-        h.hostid: h
-        for h in ZabbixHost.objects.filter(cliente_id=cliente_id)
-    }
+    hosts = client.host_get(
+        output=["hostid", "host", "name", "status"],
+        selectGroups=["groupid", "name"]
+    )
 
     for h in hosts:
-        hostid = str(h["hostid"])
+        print(f"Sincronizando host: {h['host']} (ID: {h['hostid']})")
+        host_obj, _ = ZabbixHost.objects.update_or_create(
+            cliente_id=cliente_id,
+            hostid=h["hostid"],
+            defaults={
+                "nome": h.get("name"),
+                "status": h.get("status"),
+                "raw": h
+            }
+        )
 
-        if hostid in existing:
-            obj = existing[hostid]
-            obj.hostname = h.get("host")
-            obj.nome = h.get("name")
-            obj.status = int(h.get("status") or 0)
-            obj.raw = h
-            obj.save()
-        else:
-            to_create.append(
-                ZabbixHost(
-                    cliente_id=cliente_id,
-                    hostid=hostid,
-                    hostname=h.get("host"),
-                    nome=h.get("name"),
-                    status=int(h.get("status") or 0),
-                    raw=h,
-                )
+        # 🔥 Atualiza grupos do host
+        grupos_relacionados = []
+
+        for g in h.get("groups", []):
+            group_obj, _ = ZabbixHostGroup.objects.update_or_create(
+                cliente_id=cliente_id,
+                groupid=g["groupid"],
+                defaults={
+                    "name": g["name"],
+                    "raw": g
+                }
             )
+            grupos_relacionados.append(group_obj)
 
-    if to_create:
-        ZabbixHost.objects.bulk_create(to_create, batch_size=500)
+        # 🔥 Atualiza relação M2M (substitui completamente)
+        host_obj.groups.set(grupos_relacionados)

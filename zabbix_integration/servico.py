@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from zabbix_integration.services.sync import get_client_for_cliente
-from .models import ZabbixHost, ZabbixItem, ZabbixTrigger, ZabbixEvent
+from .models import ZabbixHost, ZabbixItem, ZabbixTrigger, ZabbixEvent, ZabbixHostGroup
 from datetime import datetime, timedelta, timezone as dt_timezone
 from django.db import transaction
 
@@ -14,24 +14,27 @@ def sync_hosts(
 ) -> dict[str, Any]:
 
     params = {
-        "output": ["hostid", 
-                   "host", 
-                   "name", 
-                   "status", 
-                   "description",
-                   "proxy_hostid",
-                   "maintenance_status",
-                   "maintenace_type",
-                   "available",
-                   "snmp_available",
-                   "ipmi_available",
-                   "jmx_available",
-                   "tls_connect",
-                   "tls_accept",
-                   "flags",
-                   "inventory_mode",
-                   ],
+        "output": [
+            "hostid",
+            "host",
+            "name",
+            "status",
+            "description",
+            "proxy_hostid",
+            "maintenance_status",
+            "maintenace_type",
+            "available",
+            "snmp_available",
+            "ipmi_available",
+            "jmx_available",
+            "tls_connect",
+            "tls_accept",
+            "flags",
+            "inventory_mode",
+        ],
         "selectInterfaces": ["ip", "dns", "port"],
+        # 🔥 ADICIONADO AQUI
+        "selectGroups": ["groupid", "name"],
     }
 
     # ✅ Aplicando filtros se existirem
@@ -43,7 +46,6 @@ def sync_hosts(
             filter_dict["host"] = filtros["host"]
 
         if filtros.get("hostname"):
-            # busca parcial no name
             search_dict["name"] = filtros["hostname"]
 
         if filter_dict:
@@ -63,19 +65,34 @@ def sync_hosts(
         i0 = interfaces[0] if interfaces else {}
 
         defaults = {
-            "hostid": h.get("hostid"),
             "hostname": h.get("host"),
             "nome": h.get("name"),
             "status": int(h.get("status") or 0),
             "raw": h,
         }
 
-        # ⚠️ Mantive sua estrutura atual sem quebrar
-        ZabbixHost.objects.update_or_create(
+        host_obj, _ = ZabbixHost.objects.update_or_create(
             cliente_id=cliente_id,
             hostid=str(h["hostid"]),
-            defaults=defaults,  # 🔥 Recomendo usar defaults
+            defaults=defaults,
         )
+
+        # 🔥 -------- SINCRONIZAÇÃO DOS GRUPOS --------
+        grupos_relacionados = []
+
+        for g in h.get("groups", []):
+            group_obj, _ = ZabbixHostGroup.objects.update_or_create(
+                cliente_id=cliente_id,
+                groupid=str(g["groupid"]),
+                defaults={
+                    "name": g.get("name"),
+                    "raw": g,
+                }
+            )
+            grupos_relacionados.append(group_obj)
+
+        # 🔥 Atualiza relação ManyToMany (remove antigos e adiciona atuais)
+        host_obj.groups.set(grupos_relacionados)
 
         saved += 1
 
@@ -84,7 +101,6 @@ def sync_hosts(
         "saved": saved,
         "filtros_aplicados": filtros or {}
     }
-
 
 def _dt_from_epoch(ts: str | int):
     return datetime.fromtimestamp(int(ts), tz=dt_timezone.utc)

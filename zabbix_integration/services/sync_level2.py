@@ -137,6 +137,7 @@ def sync_events(
             "c_eventid",
             "userid",
             "opdata",
+            "objectid",
         ],
         "time_from": time_from,
         "sortfield": ["clock"],
@@ -175,6 +176,10 @@ def sync_events(
                 "value": int(ev.get("value") or 0),
                 "clock": _dt_from_epoch(ev["clock"]),
                 "raw": ev,
+                "r_eventid": ev.get("r_eventid"),
+                "c_eventid": ev.get("c_eventid"),
+                "opdata": ev.get("opdata"),
+                "objectid": ev.get("objectid"),                
             },
         )
         saved += 1

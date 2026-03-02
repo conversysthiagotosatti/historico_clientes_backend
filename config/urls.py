@@ -37,7 +37,10 @@ urlpatterns = [
     path("api/", include("contratos.analytics.urls")),
     path("api/", include("contratos.urls")),
     path("copilot/mcp/", include("copilot_mcp.urls")),
-
+    path("api/contratos-ai/", include("contratos_ai.urls")),
+    path("api/notificacoes/", include("notificacoes.urls")),
+    path("zabbix/", include("zabbix_integration.api.urls")),
+    path("api/softdesk/", include("softdesk.urls")),
 ]
 
 if settings.DEBUG:

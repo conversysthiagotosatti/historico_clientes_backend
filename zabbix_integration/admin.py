@@ -14,7 +14,8 @@ from .models import (
     ZabbixSLA,
     ZabbixAlarm, 
     ZabbixAlarmEvent, 
-    ZabbixAlertSent
+    ZabbixAlertSent,
+    ZabbixHostGroup,
 )
 
 @admin.register(ZabbixConnection)
@@ -49,7 +50,7 @@ class ZabbixHostAdmin(admin.ModelAdmin):
 class ZabbixTriggerAdmin(admin.ModelAdmin):
     list_display = ("id", "triggerid", "cliente", "name", "severity", "enabled", "lastchange")
     list_filter = ("triggerid", "cliente", "name", "severity", "enabled", "lastchange")
-    search_fields = ("name", "severity", "enabled", "lastchange")
+    search_fields = ("name", "severity", "enabled", "lastchange", "id", "triggerid")
     ordering = ("-lastchange",)
 
     autocomplete_fields = ("cliente",)
@@ -195,3 +196,53 @@ class ZabbixAlertSentAdmin(admin.ModelAdmin):
     search_fields = ("alertid", "eventid", "sendto", "subject", "cliente__nome")
     ordering = ("-clock",)
     autocomplete_fields = ("cliente",)
+
+@admin.register(ZabbixHostGroup)
+class ZabbixHostGroupAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "cliente",
+        "groupid",
+        "name",
+        "criado_em",
+        "atualizado_em",
+    )
+
+    list_filter = (
+        "cliente",
+    )
+
+    search_fields = (
+        "name",
+        "groupid",
+        "cliente__nome",
+    )
+
+    ordering = ("cliente", "name")
+
+    readonly_fields = (
+        "criado_em",
+        "atualizado_em",
+        "raw",
+    )
+
+    fieldsets = (
+        ("Informações Básicas", {
+            "fields": (
+                "cliente",
+                "groupid",
+                "name",
+            )
+        }),
+        ("Dados Técnicos", {
+            "fields": (
+                "raw",
+            )
+        }),
+        ("Auditoria", {
+            "fields": (
+                "criado_em",
+                "atualizado_em",
+            )
+        }),
+    )
