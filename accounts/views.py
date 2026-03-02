@@ -27,6 +27,7 @@ from rest_framework.response import Response
 
 from .filters import UserFilter
 from .serializers import UserListSerializer, CreateUserWithMembershipsSerializer
+from accounts.models import ModuloPermissao
 
 User = get_user_model()
 
@@ -64,12 +65,31 @@ class LoginWithClienteView(APIView):
             .filter(user=user, cliente_id=int(cliente_id), ativo=True)
             .first()
         )
-
+        print(membership)
         if not membership:
             return Response(
                 {"detail": "Usuário não possui acesso a este cliente."},
                 status=403,
             )
+        print(membership.cliente_id)
+        print(user)
+        modulos = (
+            ModuloPermissao.objects
+            .select_related("modulo")
+            .filter(
+                user=user,
+                modulo__ativo=True,
+            )
+        )
+        print(modulos)
+        modulos_data = [
+            {
+                "id": m.modulo.id,
+                "nome": m.modulo.nome,
+                "descricao": m.modulo.descricao,
+            }
+            for m in modulos
+        ]
 
         # ✅ Gera token usando o mesmo serializer do TokenObtainPairView
         serializer = TokenObtainPairSerializer(
@@ -94,6 +114,7 @@ class LoginWithClienteView(APIView):
                     "nome": membership.cliente.nome,
                 },
                 "role": membership.role,
+                "modulos": modulos_data,  # 👈 aqui
             },
             status=200,
         )
