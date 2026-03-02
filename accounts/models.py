@@ -52,6 +52,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
     tipo_usuario = models.CharField(max_length=20, choices=Tipo.choices, default=Tipo.INTERNO)
     cliente = models.ForeignKey("clientes.Cliente", on_delete=models.SET_NULL, null=True, blank=True, related_name="usuarios")
+    avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
 
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
