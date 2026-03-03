@@ -10,6 +10,8 @@ from contratos.views_arquivo import ContratoArquivoViewSet
 from tarefas.views import TarefaViewSet, ApontamentoViewSet
 from auth_api import views as auth_views
 from accounts.views_equipes import EquipeViewSet, EquipeMembroViewSet
+from .views import TestarTokenGraphView
+from .views import ImportarCidadesView
 
 router = DefaultRouter()
 router.register(r"clientes", ClienteViewSet)
@@ -43,6 +45,8 @@ urlpatterns = [
     path("api/softdesk/", include("softdesk.urls")),
     path("api/helpdesk/", include("helpdesk.urls")),
     path("api/network-scripts/", include("network_scripts.urls")),
+    path("api/network-scripts/", include("network_scripts.urls")),
+    path("api/importar-cidades/", ImportarCidadesView.as_view()),
 ]
 
 if settings.DEBUG:

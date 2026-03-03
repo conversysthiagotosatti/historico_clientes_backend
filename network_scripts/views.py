@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 
 from .models import Unidade, ScriptTemplate, ScriptGerado
 from .engine import gerar_script
+from config.services import gerar_token_graph, enviar_email_graph
 
 
 class GerarScriptView(APIView):
@@ -31,3 +32,27 @@ class GerarScriptView(APIView):
             "hash": script_obj.hash_script,
             "gerado_em": script_obj.gerado_em,
         })
+
+class TestarTokenGraphView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        token_data = gerar_token_graph()
+
+        return Response({
+            "token_type": token_data.get("token_type"),
+            "expires_in": token_data.get("expires_in"),
+            "access_token_inicio": token_data.get("access_token")[:50]
+        })
+
+class TestarEnvioEmailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        enviar_email_graph(
+            destinatario="thiago.tosatti@conversys.global",
+            assunto="Teste envio via Graph",
+            corpo="Funcionando via Microsoft Graph 🚀"
+        )
+
+        return Response({"status": "Email enviado"})
