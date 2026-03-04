@@ -106,7 +106,7 @@ class Command(BaseCommand):
                     'cnpj': (x.get('cnpj') or '')[:20],
                     'cpf': (x.get('cpf') or '')[:15],
                     'email': (x.get('email') or '')[:254] or None,
-                    'telefone': (x.get('telefone') or '')[:30],
+                    'telefone': str(x.get('telefone') or '')[:30],
                     'cidade': self._fk(Cidade, x.get('cidade')),
                     'empresa': self._fk(Empresa, x.get('empresa')),
                 }
@@ -120,7 +120,7 @@ class Command(BaseCommand):
                 codigo_integracao=x.get('codigo'),
                 defaults={
                     'nome': (x.get('nome') or x.get('razao_social') or x.get('descricao') or '')[:200],
-                    'telefone': (x.get('telefone') or '')[:30],
+                    'telefone': str(x.get('telefone') or '')[:30],
                     'email': (x.get('email') or '')[:254] or None,
                     'cliente': self._fk(ClienteHelpdesk, x.get('cliente')),
                     'cidade': self._fk(Cidade, x.get('cidade')),
@@ -137,7 +137,7 @@ class Command(BaseCommand):
                     'nome': (x.get('nome') or '')[:200],
                     'login': (x.get('login') or '')[:100],
                     'email': (x.get('email') or '')[:254] or None,
-                    'telefone': (x.get('telefone') or '')[:30],
+                    'telefone': str(x.get('telefone') or '')[:30],
                     'cliente': self._fk(ClienteHelpdesk, x.get('cliente')),
                     'filial': self._fk(Filial, x.get('filial')),
                     'departamento': self._fk(Departamento, x.get('departamento')),
@@ -151,7 +151,7 @@ class Command(BaseCommand):
             ContratoHelpdesk.objects.update_or_create(
                 codigo_integracao=x.get('codigo'),
                 defaults={
-                    'numero': (x.get('numero') or '')[:100],
+                    'numero': str(x.get('numero') or '')[:100],
                     'descricao': x.get('titulo') or x.get('descricao') or '',
                     'cliente': self._fk(ClienteHelpdesk, x.get('contratante') or x.get('cliente')),
                     'fornecedor': self._fk(Fornecedor, x.get('fornecedor')),
@@ -276,7 +276,7 @@ class Command(BaseCommand):
                 codigo_integracao=x.get('codigo'),
                 defaults={
                     'nome': (x.get('nome') or '')[:255],
-                    'numero_serie': (x.get('numero_serie') or '')[:100],
+                    'numero_serie': str(x.get('numero_serie') or '')[:100],
                     'descricao': x.get('descricao') or '',
                 }
             )
@@ -304,7 +304,7 @@ class Command(BaseCommand):
                     'nome_fantasia': (x.get('nome_fantasia') or '')[:255],
                     'cnpj': (x.get('cnpj') or '')[:20],
                     'email': (x.get('email') or '')[:254] or None,
-                    'telefone': (x.get('telefone') or '')[:30],
+                    'telefone': str(x.get('telefone') or '')[:30],
                     'cidade': self._fk(Cidade, x.get('cidade')),
                     'area': self._fk(Area, x.get('area')),
                 }
@@ -318,7 +318,7 @@ class Command(BaseCommand):
                 codigo_integracao=x.get('codigo'),
                 defaults={
                     'nome': (x.get('descricao') or x.get('nome') or '')[:200],
-                    'codigo': (x.get('codigo_centro') or str(x.get('codigo', '')))[:50],
+                    'codigo': str(x.get('codigo_centro') or x.get('codigo') or '')[:50],
                 }
             )
         self._count("Centro Custo", items)
