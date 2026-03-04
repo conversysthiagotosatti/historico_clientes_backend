@@ -8,7 +8,6 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 import datetime
 
 from .models import (
-    Setor,
     Chamado, ChamadoMensagem, ChamadoHistorico,
     ChamadoApontamento, ChamadoTimer, ChamadoTimerEstado, ChamadoStatus,
     Cidade, Empresa, ClienteHelpdesk, Departamento, Filial,
@@ -24,7 +23,6 @@ from .models import (
 )
 
 from .serializers import (
-    SetorSerializer,
     ChamadoSerializer, ChamadoListSerializer, ChamadoDetailSerializer,
     ChamadoMensagemSerializer, ChamadoHistoricoSerializer,
     ChamadoApontamentoSerializer, ChamadoTimerSerializer,
@@ -48,26 +46,17 @@ from .serializers import (
 
 
 # =============================================
-# Setor
-# =============================================
-class SetorViewSet(viewsets.ModelViewSet):
-    queryset = Setor.objects.all()
-    serializer_class = SetorSerializer
-    pagination_class = None
-
-
-# =============================================
 # Chamado (expandido)
 # =============================================
 class ChamadoViewSet(viewsets.ModelViewSet):
     queryset = Chamado.objects.select_related(
-        'setor', 'solicitante', 'atendente',
+        'solicitante', 'atendente',
         'categoria', 'servico', 'tipo_chamado', 'area',
         'cliente_helpdesk', 'impacto', 'grupo_solucao', 'atendente_helpdesk',
     )
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = [
-        'status', 'setor', 'prioridade', 'solicitante', 'atendente',
+        'status', 'prioridade', 'solicitante', 'atendente',
         'categoria', 'servico', 'tipo_chamado', 'area',
         'cliente_helpdesk', 'filial', 'contrato_helpdesk',
         'centro_custo', 'impacto', 'grupo_solucao', 'atendente_helpdesk',

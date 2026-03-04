@@ -2,7 +2,6 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
 from .models import (
-    Setor,
     Chamado, ChamadoMensagem, ChamadoHistorico, ChamadoApontamento, ChamadoTimer,
     Cidade, Empresa, ClienteHelpdesk, Departamento, Filial,
     UsuarioHelpdesk, ContratoHelpdesk, AnexoContrato, Atendente,
@@ -28,13 +27,6 @@ class UserSimpleSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'first_name', 'last_name', 'email']
 
 
-# =============================================
-# Setor
-# =============================================
-class SetorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Setor
-        fields = '__all__'
 
 
 # =============================================
@@ -394,7 +386,7 @@ class ChamadoSerializer(serializers.ModelSerializer):
 
 
 class ChamadoListSerializer(serializers.ModelSerializer):
-    setor_detalhes = SetorSerializer(source='setor', read_only=True)
+    grupo_solucao_detalhes = GrupoSolucaoSerializer(source='grupo_solucao', read_only=True)
     solicitante_detalhes = UserSimpleSerializer(source='solicitante', read_only=True)
     atendente_detalhes = UserSimpleSerializer(source='atendente', read_only=True)
     categoria_detalhes = CategoriaSerializer(source='categoria', read_only=True)
@@ -404,7 +396,8 @@ class ChamadoListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chamado
         fields = [
-            'id', 'titulo', 'status', 'prioridade', 'setor', 'setor_detalhes',
+            'id', 'titulo', 'status', 'prioridade',
+            'grupo_solucao', 'grupo_solucao_detalhes',
             'solicitante', 'solicitante_detalhes', 'atendente', 'atendente_detalhes',
             'categoria', 'categoria_detalhes',
             'tipo_chamado', 'tipo_chamado_detalhes',
@@ -415,7 +408,6 @@ class ChamadoListSerializer(serializers.ModelSerializer):
 
 
 class ChamadoDetailSerializer(serializers.ModelSerializer):
-    setor_detalhes = SetorSerializer(source='setor', read_only=True)
     solicitante_detalhes = UserSimpleSerializer(source='solicitante', read_only=True)
     atendente_detalhes = UserSimpleSerializer(source='atendente', read_only=True)
     categoria_detalhes = CategoriaSerializer(source='categoria', read_only=True)

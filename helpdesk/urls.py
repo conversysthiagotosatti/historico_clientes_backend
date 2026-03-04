@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    SetorViewSet, ChamadoViewSet, ChamadoTimerViewSet,
+    ChamadoViewSet, ChamadoTimerViewSet,
     CidadeViewSet, EmpresaViewSet, ClienteHelpdeskViewSet,
     DepartamentoViewSet, FilialViewSet, UsuarioHelpdeskViewSet,
     ContratoHelpdeskViewSet, AtendenteViewSet,
@@ -21,7 +21,6 @@ from .views import (
 router = DefaultRouter()
 
 # Core
-router.register(r'setores', SetorViewSet, basename='setor')
 router.register(r'chamados', ChamadoViewSet, basename='chamado')
 
 # Cadastro

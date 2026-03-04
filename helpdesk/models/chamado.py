@@ -23,10 +23,7 @@ class ChamadoPrioridade(models.TextChoices):
 class Chamado(models.Model):
     titulo = models.CharField(max_length=255)
     descricao = models.TextField()
-    setor = models.ForeignKey(
-        "helpdesk.Setor", on_delete=models.PROTECT,
-        related_name="chamados", null=True, blank=True
-    )
+    # FK 'setor' removido — conceito migrado para grupo_solucao (Softdesk: grupo-solucao)
 
     status = models.CharField(max_length=20, choices=ChamadoStatus.choices,
                                default=ChamadoStatus.ABERTO)

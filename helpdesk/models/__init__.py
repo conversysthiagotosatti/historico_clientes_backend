@@ -1,8 +1,6 @@
 # helpdesk/models/__init__.py
 # Re-exporta todos os modelos para manter compatibilidade de imports
 
-from .base import Setor  # noqa: F401
-
 from .chamado import (  # noqa: F401
     ChamadoStatus, ChamadoPrioridade, Chamado,
     ChamadoTipoAutor, ChamadoMensagem, ChamadoHistorico,

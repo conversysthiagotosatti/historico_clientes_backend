@@ -2,7 +2,6 @@ from django.contrib import admin
 from django.utils.html import format_html
 
 from .models import (
-    Setor,
     Chamado, ChamadoMensagem, ChamadoHistorico, ChamadoApontamento, ChamadoTimer,
     Cidade, Empresa, ClienteHelpdesk, Departamento, Filial,
     UsuarioHelpdesk, ContratoHelpdesk, AnexoContrato, Atendente,
@@ -17,20 +16,6 @@ from .models import (
 )
 
 
-# ================================
-# 🔹 SETOR
-# ================================
-@admin.register(Setor)
-class SetorAdmin(admin.ModelAdmin):
-    list_display = ("nome", "cor_preview", "icone")
-    search_fields = ("nome",)
-
-    def cor_preview(self, obj):
-        return format_html(
-            '<div style="width:20px;height:20px;background:{};border-radius:4px;"></div>',
-            obj.cor
-        )
-    cor_preview.short_description = "Cor"
 
 
 # ================================
@@ -72,12 +57,12 @@ class AnexoChamadoInline(admin.TabularInline):
 @admin.register(Chamado)
 class ChamadoAdmin(admin.ModelAdmin):
     list_display = (
-        "id", "titulo", "status", "prioridade", "setor",
+        "id", "titulo", "status", "prioridade", "grupo_solucao",
         "categoria", "tipo_chamado", "cliente_helpdesk",
         "solicitante", "atendente", "criado_em",
     )
     list_filter = (
-        "status", "prioridade", "setor", "categoria",
+        "status", "prioridade", "grupo_solucao", "categoria",
         "tipo_chamado", "area", "criado_em",
     )
     search_fields = (
@@ -85,7 +70,7 @@ class ChamadoAdmin(admin.ModelAdmin):
         "solicitante__username", "atendente__username",
     )
     autocomplete_fields = (
-        "solicitante", "atendente", "setor", "chamados_vinculados",
+        "solicitante", "atendente", "chamados_vinculados",
         "categoria", "servico", "tipo_chamado", "template",
         "area", "cliente_helpdesk", "filial", "contrato_helpdesk",
         "centro_custo", "impacto", "grupo_solucao", "atendente_helpdesk",
@@ -100,7 +85,7 @@ class ChamadoAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ("Informações principais", {
-            "fields": ("titulo", "descricao", "setor")
+            "fields": ("titulo", "descricao")
         }),
         ("Classificação", {
             "fields": (
@@ -137,8 +122,8 @@ class ChamadoAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
-            "setor", "solicitante", "atendente",
-            "categoria", "tipo_chamado", "cliente_helpdesk",
+            "solicitante", "atendente",
+            "categoria", "tipo_chamado", "cliente_helpdesk", "grupo_solucao",
         )
 
 
