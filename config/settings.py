@@ -63,7 +63,8 @@ INSTALLED_APPS = [
     "contratos_ai",
     "notificacoes",
     "softdesk",
-    "helpdesk",
+    #"helpdesk",
+    "helpdesk.apps.HelpdeskConfig",
     "network_scripts",
 ]
 
