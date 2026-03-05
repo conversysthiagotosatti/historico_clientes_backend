@@ -45,3 +45,58 @@ class DocumentoGerado(models.Model):
     versao = models.IntegerField(default=1)
     criado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     criado_em = models.DateTimeField(auto_now_add=True)
+
+class MemoriaCalculo(models.Model):
+
+    contrato = models.ForeignKey(
+        "contratos.Contrato",
+        on_delete=models.CASCADE,
+        related_name="memorias_calculo",
+    )
+
+    gross_revenue = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    net_revenue = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+
+    cost_products = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    additional_costs = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+
+    gross_profit = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    lucro = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+
+    margem_percentual = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Memória de cálculo"
+        verbose_name_plural = "Memórias de cálculo"
+
+    def __str__(self) -> str:
+        return f"Memória {self.id} - Contrato {self.contrato_id}"
+
+
+class MemoriaCalculoItem(models.Model):
+
+    TIPOS = (
+        ("receita", "Receita"),
+        ("custo", "Custo"),
+        ("opex", "OPEX"),
+    )
+
+    memoria = models.ForeignKey(
+        MemoriaCalculo,
+        on_delete=models.CASCADE,
+        related_name="itens",
+    )
+
+    tipo = models.CharField(max_length=20, choices=TIPOS)
+    descricao = models.CharField(max_length=255)
+
+    quantidade = models.DecimalField(max_digits=10, decimal_places=2)
+    preco_unitario = models.DecimalField(max_digits=12, decimal_places=2)
+    total = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return self.descricao

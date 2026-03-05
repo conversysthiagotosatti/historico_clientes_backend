@@ -172,6 +172,9 @@ class ContratoTarefa(models.Model):
     titulo = models.CharField(max_length=200)
     descricao = models.TextField(blank=True, null=True)
 
+    data_inicio_prevista = models.DateField(blank=True, null=True)
+    horas_previstas = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+
     responsavel_sugerido = models.CharField(max_length=80, blank=True, null=True)  # ex: "Gerente de Projeto"
     prioridade = models.CharField(max_length=20, blank=True, null=True)           # ex: "ALTA", "MEDIA", "BAIXA"
     prazo_dias_sugerido = models.IntegerField(blank=True, null=True)              # ex: 7, 15, 30
@@ -187,6 +190,23 @@ class ContratoTarefa(models.Model):
         null=True,
         blank=True,
         related_name="tarefas_responsavel",
+    )
+
+    usuario_criador = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="tarefas_criador",
+    )
+
+    # Ligação opcional com um épico (agrupador de tarefas)
+    epico = models.ForeignKey(
+        "tarefas.Epico",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="contrato_tarefas",
     )
 
     criado_em = models.DateTimeField(auto_now_add=True)

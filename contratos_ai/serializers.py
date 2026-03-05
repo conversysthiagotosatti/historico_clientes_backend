@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ClausulaBase, DocumentoGerado
+from .models import ClausulaBase, DocumentoGerado, MemoriaCalculo, MemoriaCalculoItem
 
 
 # ================================
@@ -25,3 +25,31 @@ class DocumentoGeradoSerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentoGerado
         fields = "__all__"
+
+
+# ================================
+# MEMÓRIA DE CÁLCULO
+# ================================
+
+
+class MemoriaCalculoItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MemoriaCalculoItem
+        fields = "__all__"
+
+
+class MemoriaCalculoSerializer(serializers.ModelSerializer):
+    itens = MemoriaCalculoItemSerializer(many=True)
+
+    class Meta:
+        model = MemoriaCalculo
+        fields = "__all__"
+
+    def create(self, validated_data):
+        itens_data = validated_data.pop("itens", [])
+        memoria = MemoriaCalculo.objects.create(**validated_data)
+
+        for item_data in itens_data:
+            MemoriaCalculoItem.objects.create(memoria=memoria, **item_data)
+
+        return memoria

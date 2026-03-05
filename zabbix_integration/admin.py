@@ -86,8 +86,17 @@ class ZabbixItemAdmin(admin.ModelAdmin):
         "short_lastvalue",
         "enabled",
     )
-    list_filter = ("cliente", "itemid","host", "value_type", "enabled")
-    search_fields = ("name", "itemid","key", "host__nome", "host__hostname", "cliente__nome")
+    list_filter = ("cliente", "itemid", "host", "value_type", "enabled")
+    search_fields = (
+        "id",              # id interno do Django
+        "itemid",          # id do item no Zabbix
+        "name",
+        "key",
+        "host__nome",      # nome amigável do host
+        "host__hostname",  # hostname do host
+        "host__hostid",    # id do host no Zabbix
+        "cliente__nome",
+    )
     ordering = ("cliente__nome", "host__nome", "name")
 
     autocomplete_fields = ("cliente", "host")
@@ -103,7 +112,7 @@ class ZabbixItemAdmin(admin.ModelAdmin):
 @admin.register(ZabbixHistory)
 class ZabbixHistoryAdmin(admin.ModelAdmin):
     list_display = ("id", "cliente", "item", "clock", "short_value")
-    list_filter = ("cliente", "clock")
+    list_filter = ("cliente", "clock", "item")
     search_fields = ("item__name", "item__key", "item__host__nome", "cliente__nome")
     ordering = ("-clock",)
 
