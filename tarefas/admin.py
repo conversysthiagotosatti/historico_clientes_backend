@@ -1,11 +1,28 @@
 from django.contrib import admin
-from .models import Tarefa, Apontamento
+from .models import Tarefa, Apontamento, Epico
+
+
+@admin.register(Epico)
+class EpicoAdmin(admin.ModelAdmin):
+    list_display = ("id", "titulo", "contrato", "status", "criado_em")
+    search_fields = ("titulo", "descricao", "contrato__titulo", "contrato__cliente__nome")
+    list_filter = ("status", "contrato")
+
 
 @admin.register(Tarefa)
 class TarefaAdmin(admin.ModelAdmin):
-    list_display = ("id", "titulo", "contrato", "status", "horas_previstas", "criado_em")
-    search_fields = ("titulo", "contrato__titulo", "contrato__cliente__nome")
-    list_filter = ("status",)
+    list_display = (
+        "id",
+        "titulo",
+        "contrato",
+        "epico",
+        "status",
+        "horas_previstas",
+        "criado_em",
+    )
+    search_fields = ("titulo", "contrato__titulo", "contrato__cliente__nome", "epico__titulo")
+    list_filter = ("status", "epico")
+
 
 @admin.register(Apontamento)
 class ApontamentoAdmin(admin.ModelAdmin):

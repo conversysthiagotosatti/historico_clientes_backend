@@ -1,20 +1,23 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .services.generator import gerar_documento
-from .models import DocumentoGerado
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
-from .models import ClausulaBase, DocumentoGerado
 from rest_framework import status
+from django.http import FileResponse
+from rest_framework.decorators import action
+
+from .services.generator import gerar_documento
 from .services.clausula_ai import gerar_clausula_json
 from .services.contrato_ai import gerar_contrato_por_prompt
-from.services.exportacao import exportar_contrato, exportar_contrato_pdf_completo
+from .services.exportacao import exportar_contrato, exportar_contrato_pdf_completo
+from .services.memoria_calculo_service import calcular_memoria
+
+from .models import ClausulaBase, DocumentoGerado, MemoriaCalculo
 from .serializers import (
     ClausulaBaseSerializer,
-    DocumentoGeradoSerializer
+    DocumentoGeradoSerializer,
+    MemoriaCalculoSerializer,
 )
-from django.http import FileResponse
-from .services.exportacao import exportar_contrato, exportar_contrato_pdf_completo
 
 class GerarContratoAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -159,7 +162,7 @@ class GerarContratoAPIView(APIView):
         if not cliente_id or not tipo_contrato or not prompt_usuario:
             return Response(
                 {"error": "cliente_id, tipo_contrato e prompt são obrigatórios."},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
@@ -167,23 +170,60 @@ class GerarContratoAPIView(APIView):
                 cliente_id=cliente_id,
                 tipo_contrato=tipo_contrato,
                 prompt_usuario=prompt_usuario,
-                usuario=request.user
+                usuario=request.user,
             )
 
             return Response(
                 {
                     "message": "Contrato gerado com sucesso.",
-                    "documento": DocumentoGeradoSerializer(documento).data
+                    "documento": DocumentoGeradoSerializer(documento).data,
                 },
-                status=status.HTTP_201_CREATED
+                status=status.HTTP_201_CREATED,
             )
 
         except Exception as e:
             return Response(
                 {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-        
+
+
+class MemoriaCalculoViewSet(ModelViewSet):
+    """
+    CRUD de Memória de Cálculo ligada a um contrato.
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = MemoriaCalculoSerializer
+    queryset = MemoriaCalculo.objects.select_related("contrato").prefetch_related(
+        "itens"
+    )
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        contrato_id = self.request.query_params.get("contrato")
+        if contrato_id:
+            qs = qs.filter(contrato_id=contrato_id)
+        return qs
+
+    def perform_create(self, serializer):
+        memoria = serializer.save()
+        calcular_memoria(memoria)
+
+    def perform_update(self, serializer):
+        memoria = serializer.save()
+        calcular_memoria(memoria)
+
+    @action(detail=True, methods=["post"])
+    def calcular(self, request, pk=None):
+        memoria = self.get_object()
+        calcular_memoria(memoria)
+        return Response(
+            {"status": "memória recalculada", "id": memoria.id},
+            status=status.HTTP_200_OK,
+        )
+
+
 class ExportarContratoAPIView(APIView):
     permission_classes = [IsAuthenticated]
 

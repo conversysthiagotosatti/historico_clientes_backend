@@ -3,7 +3,7 @@ from django.utils import timezone
 from datetime import datetime
 
 from softdesk.models import SoftdeskChamado
-from helpdesk.models import Chamado, Setor, ChamadoStatus, ChamadoPrioridade
+from helpdesk.models import Chamado, GrupoSolucao, ChamadoStatus, ChamadoPrioridade
 from django.contrib.auth import get_user_model
 
 from .chamados_service import ChamadoService
@@ -42,13 +42,13 @@ class ImportSoftdeskService:
         descricao = chamado_api.get("descricao") or chamado_api.get("detalhes") or "Importado do Softdesk"
 
         # ⚠️ Ajuste conforme sua regra real
-        setor = Setor.objects.first()
+        grupo_solucao = GrupoSolucao.objects.first()
         solicitante = User.objects.first()
 
         chamado_interno = Chamado.objects.create(
             titulo=titulo,
             descricao=descricao,
-            setor=setor,
+            grupo_solucao=grupo_solucao,
             solicitante=solicitante,
             status=ChamadoStatus.ABERTO,
             prioridade=ChamadoPrioridade.MEDIA,

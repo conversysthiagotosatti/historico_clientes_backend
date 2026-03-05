@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Tarefa, Apontamento
+from .models import Tarefa, Apontamento, Epico
+
 
 class ApontamentoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -8,8 +9,16 @@ class ApontamentoSerializer(serializers.ModelSerializer):
 
 
 class TarefaSerializer(serializers.ModelSerializer):
-    horas_consumidas = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    horas_consumidas = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
 
     class Meta:
         model = Tarefa
+        fields = "__all__"
+
+
+class EpicoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Epico
         fields = "__all__"

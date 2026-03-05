@@ -1,8 +1,10 @@
 from rest_framework.routers import DefaultRouter
 from django.urls import path
+
 from .views import (
     ClausulaBaseViewSet,
     DocumentoGeradoViewSet,
+    MemoriaCalculoViewSet,
     ExportarContratoAPIView,
     GerarClausulaAPIView,
     GerarContratoAPIView,
@@ -11,6 +13,8 @@ from .views import (
 router = DefaultRouter()
 router.register(r"clausulas", ClausulaBaseViewSet)
 router.register(r"documentos", DocumentoGeradoViewSet)
+router.register(r"memorias-calculo", MemoriaCalculoViewSet)
+
 urlpatterns = router.urls
 
 urlpatterns += [
@@ -18,3 +22,4 @@ urlpatterns += [
     path("gerar-contrato/", GerarContratoAPIView.as_view()),
     path("exportar-contrato/<int:documento_id>/", ExportarContratoAPIView.as_view()),
 ]
+

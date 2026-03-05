@@ -10,6 +10,8 @@ from contratos.views_arquivo import ContratoArquivoViewSet
 from tarefas.views import TarefaViewSet, ApontamentoViewSet
 from auth_api import views as auth_views
 from accounts.views_equipes import EquipeViewSet, EquipeMembroViewSet
+from .views import TestarTokenGraphView
+from .views import ImportarCidadesView
 
 router = DefaultRouter()
 router.register(r"clientes", ClienteViewSet)
@@ -29,7 +31,7 @@ urlpatterns = [
     path("api/auth/", include("auth_api.urls")),
     path("api/", include("parametro.urls")),
     #path("api/", include("contratos.urls")),
-    #path("api/", include("tarefas.urls")),
+    path("api/", include("tarefas.urls")),
     path("api/", include("jira_sync.urls")),
     path("api/", include("rag.urls")),
     path("api/", include("zabbix_integration.urls")),
@@ -43,6 +45,8 @@ urlpatterns = [
     path("api/softdesk/", include("softdesk.urls")),
     path("api/helpdesk/", include("helpdesk.urls")),
     path("api/network-scripts/", include("network_scripts.urls")),
+    path("api/network-scripts/", include("network_scripts.urls")),
+    path("api/importar-cidades/", ImportarCidadesView.as_view()),
 ]
 
 if settings.DEBUG:

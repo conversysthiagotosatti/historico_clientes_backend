@@ -10,6 +10,8 @@ class ContratoSerializer(serializers.ModelSerializer):
 
 
 class ContratoTarefaSerializer(serializers.ModelSerializer):
+    epico_titulo = serializers.CharField(source="epico.titulo", read_only=True)
+
     class Meta:
         model = ContratoTarefa
         fields = "__all__"
